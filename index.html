@@ -32,14 +32,18 @@
 <body class="bg-slate-50 min-h-screen p-2 md:p-4 font-sans text-slate-800 text-[12px] md:text-sm leading-relaxed tracking-tight">
     <div class="max-w-xl mx-auto">
         <header class="mb-3 text-center py-1">
-            <h1 class="text-xl font-bold text-slate-800">配送一括追跡</h1>
+            <h1 class="text-xl font-bold text-slate-800">配送追跡</h1>
         </header>
 
         <main>
             <div class="mb-5 bg-white p-3 rounded-[1.5rem] shadow-sm border border-slate-200">
                 <div class="flex justify-end items-center mb-3">
-                    <input type="date" id="commonShipDate" class="bg-slate-100 text-[10px] font-bold p-1 px-2 rounded-lg border border-slate-200 outline-none">
+                    <div class="flex items-center gap-1">
+                        <span class="text-[10px] font-medium text-slate-400">発送日:</span>
+                        <input type="date" id="commonShipDate" class="bg-slate-100 text-[10px] font-bold p-1 px-2 rounded-lg border border-slate-200 outline-none">
+                    </div>
                 </div>
+                
                 <div class="space-y-1.5 mb-4">
                     <script>
                         const remarkOptions = `<option value="GEO">GEO</option><option value="2nd">2nd</option><option value="ハードオフ">ハード</option><option value="Nojima">Nojima</option><option value="じゃんぱら">じゃん</option><option value="ELECOM">ELECOM</option><option value="プライベート">個人</option><option value="その他">他</option>`;
@@ -57,12 +61,13 @@
                         }
                     </script>
                 </div>
+
                 <div class="grid grid-cols-1 gap-2 pt-3 border-t border-slate-100">
                     <div class="bg-slate-100 p-2 rounded-xl border border-slate-200 flex items-center justify-center gap-2">
                         <span class="text-[10px] font-bold text-slate-500">一括時間</span>
                         <select id="commonTimeSlot" onchange="syncTimeSlots(this.value)" class="bg-transparent text-[11px] font-bold outline-none text-slate-800">${timeOptions}</select>
                     </div>
-                    <button onclick="addAll()" class="bg-slate-800 text-white font-bold py-3.5 rounded-xl text-sm active:scale-95 transition-transform mt-1 shadow-md">追跡を開始する</button>
+                    <button onclick="addAll()" class="bg-slate-800 text-white font-bold py-3.5 rounded-xl text-sm active:scale-95 transition-transform mt-1 shadow-md">登録</button>
                 </div>
             </div>
 
@@ -79,7 +84,7 @@
 
         function addAll() {
             const rows = document.querySelectorAll('.row-entry');
-            const items = JSON.parse(localStorage.getItem('delivery_v_no_status') || '[]');
+            const items = JSON.parse(localStorage.getItem('delivery_v_final_minimal') || '[]');
             rows.forEach(row => {
                 const carrier = row.querySelector('.carrier-sel').value;
                 const num = row.querySelector('.num-input').value.trim();
@@ -87,41 +92,45 @@
                 if (num && carrier !== "none") {
                     items.unshift({ id: Date.now() + Math.random(), carrier, num, remark: remark === "選択" ? "荷物" : remark, shipDateRaw: document.getElementById('commonShipDate').value, deliveryDate: formatDateShort(new Date(new Date(document.getElementById('commonShipDate').value).getTime() + 172800000)), timeSlot: row.querySelector('.row-time-sel').value });
                     row.querySelector('.num-input').value = '';
+                    row.querySelector('.remark-sel').value = "選択";
+                    const carrierSel = row.querySelector('.carrier-sel');
+                    carrierSel.value = "none";
+                    updateCarrierColor(carrierSel);
                 }
             });
-            localStorage.setItem('delivery_v_no_status', JSON.stringify(items));
+            localStorage.setItem('delivery_v_final_minimal', JSON.stringify(items));
             render();
             syncTimeSlots("なし");
         }
 
         function remove(id) {
-            let items = JSON.parse(localStorage.getItem('delivery_v_no_status') || '[]');
-            localStorage.setItem('delivery_v_no_status', JSON.stringify(items.filter(i => i.id !== id)));
+            let items = JSON.parse(localStorage.getItem('delivery_v_final_minimal') || '[]');
+            localStorage.setItem('delivery_v_final_minimal', JSON.stringify(items.filter(i => i.id !== id)));
             render();
         }
 
         function render() {
-            const items = JSON.parse(localStorage.getItem('delivery_v_no_status') || '[]');
+            const items = JSON.parse(localStorage.getItem('delivery_v_final_minimal') || '[]');
             const listEl = document.getElementById('list');
             if (items.length === 0) { listEl.innerHTML = '<p class="text-center py-10 text-slate-300 font-bold uppercase tracking-widest text-[10px]">荷物はありません</p>'; return; }
 
             listEl.innerHTML = items.map(item => {
                 return `
                 <div class="bg-white rounded-[1.25rem] border-4 border-${item.carrier} p-2 shadow-sm">
-                    <div class="flex items-center gap-1.5 mb-2">
-                        <div class="bg-slate-100 rounded-lg w-[45px] h-10 shrink-0 flex items-center justify-center border border-slate-200">
+                    <div class="flex items-center gap-1 mb-2">
+                        <div class="bg-slate-100 rounded-lg w-[55px] h-10 shrink-0 flex items-center justify-center border border-slate-200">
                             <p class="text-[13px] font-bold leading-none">${item.deliveryDate}</p>
                         </div>
                         
-                        <div class="bg-slate-100 rounded-lg w-[45px] h-10 shrink-0 flex items-center justify-center border border-slate-200">
+                        <div class="bg-slate-100 rounded-lg w-[55px] h-10 shrink-0 flex items-center justify-center border border-slate-200">
                             <p class="text-[11px] font-bold text-slate-500 leading-none">${item.timeSlot}</p>
                         </div>
 
-                        <a href="${urls[item.carrier]}${item.num}" target="_blank" class="bg-white border-2 border-slate-800 rounded-lg h-10 flex-1 flex items-center justify-center active:bg-slate-100 transition-colors">
+                        <a href="${urls[item.carrier]}${item.num}" target="_blank" class="bg-white border-2 border-slate-800 rounded-lg h-10 w-[55px] shrink-0 flex items-center justify-center active:bg-slate-100 transition-colors">
                             <p class="text-[12px] font-bold">追跡</p>
                         </a>
 
-                        <button onclick="remove(${item.id})" class="bg-slate-100 border border-slate-200 rounded-lg h-10 w-[60px] shrink-0 flex items-center justify-center active:bg-red-500 active:text-white transition-colors">
+                        <button onclick="remove(${item.id})" class="bg-slate-100 border border-slate-200 rounded-lg h-10 w-[55px] shrink-0 flex items-center justify-center active:bg-red-500 active:text-white transition-colors">
                             <p class="text-[12px] font-bold">完了</p>
                         </button>
                     </div>
