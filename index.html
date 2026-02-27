@@ -8,10 +8,15 @@
     <title>配送追跡</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 業者別の枠線カラー（4px） */
+        /* 業者別の枠線カラー */
         .border-post { border-color: #ef4444 !important; }
         .border-yamato { border-color: #fbbf24 !important; }
         .border-sagawa { border-color: #2563eb !important; }
+        
+        /* 業者別の背景色（日付ボックス用） */
+        .bg-post { background-color: #ef4444 !important; color: white !important; }
+        .bg-yamato { background-color: #fbbf24 !important; color: #1e293b !important; }
+        .bg-sagawa { background-color: #2563eb !important; color: white !important; }
         
         /* セレクトボックスの業者別背景色 */
         .opt-none { background-color: #f1f5f9; color: #64748b; }
@@ -21,7 +26,6 @@
 
         input::placeholder { color: #94a3b8; font-weight: 400; }
 
-        /* iPhone SE/横幅制限対応 */
         @media (max-width: 640px) {
             .row-grid { 
                 grid-template-columns: 65px 1fr 68px 68px;
@@ -153,7 +157,7 @@
         function addAll() {
             const rows = document.querySelectorAll('.row-entry');
             const shipDateStr = document.getElementById('commonShipDate').value;
-            const items = JSON.parse(localStorage.getItem('delivery_v_final_jp_label') || '[]');
+            const items = JSON.parse(localStorage.getItem('delivery_v_final_color_match') || '[]');
             
             rows.forEach(row => {
                 const carrier = row.querySelector('.carrier-sel').value;
@@ -180,21 +184,21 @@
                     updateCarrierColor(carrierSel);
                 }
             });
-            localStorage.setItem('delivery_v_final_jp_label', JSON.stringify(items));
+            localStorage.setItem('delivery_v_final_color_match', JSON.stringify(items));
             render();
             document.getElementById('commonTimeSlot').selectedIndex = 0;
             syncTimeSlots("なし");
         }
 
         function remove(id) {
-            let items = JSON.parse(localStorage.getItem('delivery_v_final_jp_label') || '[]');
+            let items = JSON.parse(localStorage.getItem('delivery_v_final_color_match') || '[]');
             items = items.filter(item => item.id !== id);
-            localStorage.setItem('delivery_v_final_jp_label', JSON.stringify(items));
+            localStorage.setItem('delivery_v_final_color_match', JSON.stringify(items));
             render();
         }
 
         function render() {
-            const items = JSON.parse(localStorage.getItem('delivery_v_final_jp_label') || '[]');
+            const items = JSON.parse(localStorage.getItem('delivery_v_final_color_match') || '[]');
             const listEl = document.getElementById('list');
             document.getElementById('count').textContent = `${items.length} 件`;
             
@@ -224,11 +228,11 @@
                         <p class="text-[10px] font-mono text-slate-400 mb-4 text-center truncate px-0.5">${item.num}</p>
                         
                         <div class="flex gap-1.5 mb-2.5">
-                            <div class="flex-1 bg-orange-500 rounded-xl py-2.5 text-white text-center flex items-center justify-center">
+                            <div class="flex-1 rounded-xl py-2.5 text-center flex items-center justify-center bg-${item.carrier}">
                                 <p class="text-lg font-bold leading-none">${item.deliveryDate}</p>
                             </div>
                             <div class="flex-1 bg-slate-50 rounded-xl py-2.5 border border-slate-200 text-center flex items-center justify-center overflow-hidden">
-                                <p class="text-[11px] font-bold text-slate-600 leading-none truncate px-0.5">${item.timeSlot}</p>
+                                <p class="text-lg font-bold text-slate-600 leading-none truncate px-0.5">${item.timeSlot}</p>
                             </div>
                         </div>
 
