@@ -8,7 +8,6 @@
     <title>配送追跡</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 業者別のパステル背景色 */
         .card-post { background-color: #fee2e2 !important; color: #1e293b !important; }
         .card-yamato { background-color: #fef3c7 !important; color: #1e293b !important; }
         .card-sagawa { background-color: #dbeafe !important; color: #1e293b !important; }
@@ -88,15 +87,15 @@
                             </select>
                         </div>
                         <div class="bg-slate-100 p-1.5 rounded-xl border border-slate-200">
-                            <select id="commonRemark" onchange="syncRemarks(this.value)" class="w-full bg-transparent text-[10px] font-bold outline-none text-slate-800 text-center">
-                                <option value="選択" disabled selected>備考一括</option>
-                                ${remarkOptions}
-                            </select>
-                        </div>
-                        <div class="bg-slate-100 p-1.5 rounded-xl border border-slate-200">
                             <select id="commonTimeSlot" onchange="syncTimeSlots(this.value)" class="w-full bg-transparent text-[10px] font-bold outline-none text-slate-800 text-center">
                                 <option value="" disabled selected>時間一括</option>
                                 <option value="なし">なし</option><option value="8-12">8-12</option><option value="14-16">14-16</option><option value="16-18">16-18</option><option value="18-20">18-20</option><option value="19-21">19-21</option>
+                            </select>
+                        </div>
+                        <div class="bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+                            <select id="commonRemark" onchange="syncRemarks(this.value)" class="w-full bg-transparent text-[10px] font-bold outline-none text-slate-800 text-center">
+                                <option value="選択" disabled selected>備考一括</option>
+                                ${remarkOptions}
                             </select>
                         </div>
                     </div>
@@ -109,33 +108,18 @@
     </div>
 
     <script>
-        const urls = { 
-            post: "https://trackings.post.japanpost.jp/services/srv/search/direct?reqCodeNo1=", 
-            yamato: "https://toi.kuronekoyamato.co.jp/cgi-bin/tneko?number01=", 
-            sagawa: "https://k2k.sagawa-exp.co.jp/p/web/okurijosearch.do?okurijoNo=",
-            amazon: "https://www.amazon.co.jp/gp/your-account/order-history",
-            yodobashi: "https://www.yodobashi.com/"
-        };
-        
+        const urls = { post: "https://trackings.post.japanpost.jp/services/srv/search/direct?reqCodeNo1=", yamato: "https://toi.kuronekoyamato.co.jp/cgi-bin/tneko?number01=", sagawa: "https://k2k.sagawa-exp.co.jp/p/web/okurijosearch.do?okurijoNo=", amazon: "https://www.amazon.co.jp/gp/your-account/order-history", yodobashi: "https://www.yodobashi.com/" };
         document.getElementById('commonShipDate').value = new Date().toISOString().split('T')[0];
 
-        function syncCarriers(val) { 
-            document.querySelectorAll('.carrier-sel').forEach(sel => { sel.value = val; updateCarrierColor(sel); }); 
-        }
-        function syncRemarks(val) { 
-            document.querySelectorAll('.remark-sel').forEach(sel => { sel.value = val; }); 
-        }
-        function syncTimeSlots(val) { 
-            document.querySelectorAll('.row-time-sel').forEach(sel => sel.value = val); 
-        }
+        function syncCarriers(val) { document.querySelectorAll('.carrier-sel').forEach(sel => { sel.value = val; updateCarrierColor(sel); }); }
+        function syncRemarks(val) { document.querySelectorAll('.remark-sel').forEach(sel => { sel.value = val; }); }
+        function syncTimeSlots(val) { document.querySelectorAll('.row-time-sel').forEach(sel => sel.value = val); }
 
-        function formatDateShort(dateObj) { 
-            return `${dateObj.getMonth() + 1}/${dateObj.getDate()}`; 
-        }
+        function formatDateShort(dateObj) { return `${dateObj.getMonth() + 1}/${dateObj.getDate()}`; }
 
         function addAll() {
             const rows = document.querySelectorAll('.row-entry');
-            const items = JSON.parse(localStorage.getItem('delivery_v_final_hybrid') || '[]');
+            const items = JSON.parse(localStorage.getItem('delivery_v_editable_simple') || '[]');
             const shipDateStr = document.getElementById('commonShipDate').value;
 
             rows.forEach(row => {
@@ -143,25 +127,11 @@
                 const num = row.querySelector('.num-input').value.trim();
                 const remark = row.querySelector('.remark-sel').value;
                 const timeSlot = row.querySelector('.row-time-sel').value;
-
-                // ヨドバシ・Amazonの場合は番号なしでも登録許可
-                const isDirectDelivery = (carrier === 'amazon' || carrier === 'yodobashi');
-                
-                if (carrier !== "none" && (num || isDirectDelivery)) {
+                if (carrier !== "none" && (num || carrier === 'amazon' || carrier === 'yodobashi')) {
                     const shipDate = new Date(shipDateStr);
-                    const deliveryDate = new Date(shipDate);
-                    deliveryDate.setDate(shipDate.getDate() + 2);
-
-                    items.push({ 
-                        id: Date.now() + Math.random(), 
-                        carrier, 
-                        num: num || "(直接配送)", 
-                        remark: remark === "選択" ? "荷物" : remark, 
-                        shipDateRaw: shipDateStr, 
-                        deliveryDate: formatDateShort(deliveryDate), 
-                        timeSlot: timeSlot 
-                    });
-
+                    const deliveryDateObj = new Date(shipDate);
+                    deliveryDateObj.setDate(shipDate.getDate() + 2);
+                    items.push({ id: Date.now() + Math.random(), carrier, num: num || "(直接配送)", remark: remark === "選択" ? "荷物" : remark, deliveryDateRaw: deliveryDateObj.toISOString().split('T')[0], timeSlot: timeSlot });
                     row.querySelector('.num-input').value = '';
                     row.querySelector('.remark-sel').value = "選択";
                     const carrierSel = row.querySelector('.carrier-sel');
@@ -169,10 +139,8 @@
                     updateCarrierColor(carrierSel);
                 }
             });
-
-            localStorage.setItem('delivery_v_final_hybrid', JSON.stringify(items));
+            localStorage.setItem('delivery_v_editable_simple', JSON.stringify(items));
             render();
-
             document.getElementById('commonCarrier').selectedIndex = 0;
             document.getElementById('commonRemark').selectedIndex = 0;
             document.getElementById('commonTimeSlot').selectedIndex = 0;
@@ -180,55 +148,66 @@
         }
 
         function remove(id) {
-            let items = JSON.parse(localStorage.getItem('delivery_v_final_hybrid') || '[]');
-            localStorage.setItem('delivery_v_final_hybrid', JSON.stringify(items.filter(i => i.id !== id)));
+            let items = JSON.parse(localStorage.getItem('delivery_v_editable_simple') || '[]');
+            localStorage.setItem('delivery_v_editable_simple', JSON.stringify(items.filter(i => i.id !== id)));
             render();
         }
 
-        function editDate(id) {
-            let items = JSON.parse(localStorage.getItem('delivery_v_final_hybrid') || '[]');
+        // --- 編集同期用関数 ---
+        function updateDate(id, val) {
+            let items = JSON.parse(localStorage.getItem('delivery_v_editable_simple') || '[]');
             const item = items.find(i => i.id === id);
-            const newDate = prompt("到着日を修正 (M/D)", item.deliveryDate);
-            if (newDate) { item.deliveryDate = newDate; localStorage.setItem('delivery_v_final_hybrid', JSON.stringify(items)); render(); }
+            if (item) { item.deliveryDateRaw = val; localStorage.setItem('delivery_v_editable_simple', JSON.stringify(items)); render(); }
         }
-
-        function editTime(id) {
-            let items = JSON.parse(localStorage.getItem('delivery_v_final_hybrid') || '[]');
+        function updateTime(id, val) {
+            let items = JSON.parse(localStorage.getItem('delivery_v_editable_simple') || '[]');
             const item = items.find(i => i.id === id);
-            const options = ["なし", "8-12", "14-16", "16-18", "18-20", "19-21"];
-            const newTime = prompt(`時間を修正 (${options.join(", ")})`, item.timeSlot);
-            if (options.includes(newTime)) { item.timeSlot = newTime; localStorage.setItem('delivery_v_final_hybrid', JSON.stringify(items)); render(); }
+            if (item) { item.timeSlot = val; localStorage.setItem('delivery_v_editable_simple', JSON.stringify(items)); render(); }
         }
 
         function render() {
-            let items = JSON.parse(localStorage.getItem('delivery_v_final_hybrid') || '[]');
+            let items = JSON.parse(localStorage.getItem('delivery_v_editable_simple') || '[]');
             const listEl = document.getElementById('list');
             if (items.length === 0) { listEl.innerHTML = '<p class="text-center py-10 text-slate-300 font-bold text-[10px]">荷物はありません</p>'; return; }
 
             const timePriority = { "なし": 0, "8-12": 1, "14-16": 2, "16-18": 3, "18-20": 4, "19-21": 5 };
             items.sort((a, b) => {
-                const dateA = new Date(`2026/${a.deliveryDate}`);
-                const dateB = new Date(`2026/${b.deliveryDate}`);
+                const dateA = new Date(a.deliveryDateRaw);
+                const dateB = new Date(b.deliveryDateRaw);
                 if (dateA.getTime() !== dateB.getTime()) return dateA - dateB;
                 return (timePriority[a.timeSlot] || 0) - (timePriority[b.timeSlot] || 0);
             });
 
             listEl.innerHTML = items.map(item => {
+                const displayDate = formatDateShort(new Date(item.deliveryDateRaw));
                 return `
                 <div class="card-${item.carrier} rounded-[1.25rem] p-2 shadow-sm flex items-center gap-1.5">
-                    <div onclick="editDate(${item.id})" class="bg-white rounded-[1.25rem] w-[55px] h-10 shrink-0 flex items-center justify-center shadow-sm active:scale-95 transition-transform">
-                        <p class="text-[12px] font-bold text-slate-800 leading-none">${item.deliveryDate}</p>
+                    <div class="bg-white rounded-[1.25rem] w-[55px] h-10 shrink-0 relative flex items-center justify-center shadow-sm">
+                        <p class="text-[12px] font-bold text-slate-800 leading-none">${displayDate}</p>
+                        <input type="date" value="${item.deliveryDateRaw}" onchange="updateDate(${item.id}, this.value)" class="absolute inset-0 opacity-0 w-full h-full">
                     </div>
-                    <div onclick="editTime(${item.id})" class="bg-white rounded-[1.25rem] w-[55px] h-10 shrink-0 flex items-center justify-center shadow-sm active:scale-95 transition-transform">
+                    
+                    <div class="bg-white rounded-[1.25rem] w-[55px] h-10 shrink-0 relative flex items-center justify-center shadow-sm">
                         <p class="text-[10px] font-bold text-slate-500 leading-none">${item.timeSlot}</p>
+                        <select onchange="updateTime(${item.id}, this.value)" class="absolute inset-0 opacity-0 w-full h-full">
+                            <option value="なし" ${item.timeSlot==='なし'?'selected':''}>なし</option>
+                            <option value="8-12" ${item.timeSlot==='8-12'?'selected':''}>8-12</option>
+                            <option value="14-16" ${item.timeSlot==='14-16'?'selected':''}>14-16</option>
+                            <option value="16-18" ${item.timeSlot==='16-18'?'selected':''}>16-18</option>
+                            <option value="18-20" ${item.timeSlot==='18-20'?'selected':''}>18-20</option>
+                            <option value="19-21" ${item.timeSlot==='19-21'?'selected':''}>19-21</option>
+                        </select>
                     </div>
-                    <a href="${urls[item.carrier]}${item.carrier === 'amazon' || item.carrier === 'yodobashi' ? '' : item.num}" target="_blank" class="bg-slate-800 rounded-[1.25rem] h-10 w-[55px] shrink-0 flex items-center justify-center active:opacity-70 shadow-sm">
-                        <p class="text-[11px] font-bold text-white">${item.carrier === 'amazon' || item.carrier === 'yodobashi' ? '履歴' : '追跡'}</p>
+
+                    <a href="${urls[item.carrier]}${item.carrier==='amazon'||item.carrier==='yodobashi'?'':item.num}" target="_blank" class="bg-slate-800 rounded-[1.25rem] h-10 w-[55px] shrink-0 flex items-center justify-center active:opacity-70 shadow-sm">
+                        <p class="text-[11px] font-bold text-white">${item.carrier==='amazon'||item.carrier==='yodobashi'?'履歴':'追跡'}</p>
                     </a>
+
                     <div class="flex-1 min-w-0 text-left px-1 flex flex-col justify-center">
                         <p class="text-[11px] font-bold truncate leading-tight mb-0.5 text-slate-800">${item.remark}</p>
                         <p class="text-[9px] font-mono truncate leading-none text-slate-600 opacity-80">${item.num}</p>
                     </div>
+
                     <button onclick="remove(${item.id})" class="bg-white/40 backdrop-blur-sm rounded-[1.25rem] h-10 w-[55px] shrink-0 flex items-center justify-center active:bg-red-500 active:text-white transition-colors shadow-sm">
                         <p class="text-[11px] font-bold text-slate-800">完了</p>
                     </button>
