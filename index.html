@@ -3,84 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>一括配送追跡くん</title>
+    <title>一括配送管理 - Batch Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .card-post { border-left: 10px solid #e11d48; }
+        .card-yamato { border-left: 10px solid #facc15; }
+        .card-sagawa { border-left: 10px solid #2563eb; }
+        .badge-post { background-color: #e11d48; color: white; }
+        .badge-yamato { background-color: #facc15; color: #1c1917; }
+        .badge-sagawa { background-color: #2563eb; color: white; }
+        input::placeholder { color: #52525b; }
+    </style>
 </head>
-<body class="bg-slate-50 min-h-screen p-4">
-    <div class="max-w-md mx-auto bg-white shadow-xl rounded-2xl overflow-hidden border border-gray-100">
-        <header class="bg-blue-600 p-6 text-white text-center">
-            <h1 class="text-2xl font-bold">配送追跡管理</h1>
-            <p class="text-sm opacity-80">日本郵便・ヤマト・佐川に対応</p>
+<body class="bg-zinc-950 min-h-screen p-4 font-sans text-zinc-100">
+    <div class="max-w-3xl mx-auto">
+        <header class="mb-8 text-center py-6">
+            <h1 class="text-3xl font-black italic tracking-tighter text-white">BATCH TRACKER</h1>
+            <p class="text-xs text-zinc-500 mt-1 font-bold tracking-widest uppercase">Multi-Input & Auto-Cleanup</p>
         </header>
 
-        <main class="p-6">
-            <div class="space-y-4 mb-8">
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 mb-1">配送業者</label>
-                    <select id="carrier" class="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none transition-all">
-                        <option value="post">日本郵便</option>
-                        <option value="yamato">ヤマト運輸</option>
-                        <option value="sagawa">佐川急便</option>
-                    </select>
+        <main>
+            <div class="mb-12 bg-zinc-900 p-6 rounded-3xl border border-zinc-800 shadow-2xl">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-lg font-bold text-zinc-400">一括登録（最大5件）</h2>
+                    <input type="date" id="commonShipDate" class="bg-zinc-800 border-zinc-700 text-xs p-2 rounded-lg outline-none">
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-500 mb-1">追跡番号</label>
-                    <input type="text" id="num" placeholder="番号を入力" class="w-full border-2 border-gray-200 p-3 rounded-xl focus:border-blue-500 outline-none">
-                </div>
-                <button onclick="add()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-colors">
-                    リストに追加する
-                </button>
-            </div>
-
-            <h2 class="font-bold text-gray-700 mb-4 border-b pb-2">追跡中の荷物</h2>
-            <ul id="list" class="space-y-3"></ul>
-        </main>
-    </div>
-
-    <script>
-        const urls = {
-            post: "https://trackings.post.japanpost.jp/services/srv/search/direct?searchKind=S004&locale=ja&reqCodeNo1=",
-            yamato: "https://toi.kuronekoyamato.co.jp/cgi-bin/tneko?number01=",
-            sagawa: "https://k2k.sagawa-exp.co.jp/p/web/okurijosearch.do?okurijoNo="
-        };
-        const names = { post: "日本郵便", yamato: "ヤマト運輸", sagawa: "佐川急便" };
-
-        function add() {
-            const carrier = document.getElementById('carrier').value;
-            const num = document.getElementById('num').value.trim();
-            if (!num) return alert("番号を入力してください");
-
-            const items = JSON.parse(localStorage.getItem('my_shipments') || '[]');
-            items.push({ id: Date.now(), carrier, num });
-            localStorage.setItem('my_shipments', JSON.stringify(items));
-            
-            document.getElementById('num').value = '';
-            render();
-        }
-
-        function remove(id) {
-            const items = JSON.parse(localStorage.getItem('my_shipments') || '[]')
-                             .filter(item => item.id !== id);
-            localStorage.setItem('my_shipments', JSON.stringify(items));
-            render();
-        }
-
-        function render() {
-            const items = JSON.parse(localStorage.getItem('my_shipments') || '[]');
-            document.getElementById('list').innerHTML = items.map(item => `
-                <li class="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100">
-                    <div class="flex-1">
-                        <p class="text-xs text-blue-600 font-bold">${names[item.carrier]}</p>
-                        <p class="text-lg font-mono text-gray-800">${item.num}</p>
-                    </div>
-                    <div class="flex gap-2">
-                        <a href="${urls[item.carrier]}${item.num}" target="_blank" class="bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm">追跡</a>
-                        <button onclick="remove(${item.id})" class="text-gray-400 hover:text-red-500 text-sm px-2">削除</button>
-                    </div>
-                </li>
-            `).join('');
-        }
-        render();
-    </script>
-</body>
-</html>
+                
+                <div class="space-y-3 mb-6">
+                    <div id="inputRows" class="space-y-2">
+                        <div class="grid grid-cols-[80px_1fr_1fr] gap-2 items-center row-entry">
+                            <select class="carrier-sel bg-zinc-800 text-[10px] p-2 rounded-lg outline-none border border-zinc-700 h-10">
+                                <option value="yamato">ヤマト</option>
+                                <option value="sagawa">佐川</option>
+                                <option value="post">郵便</option>
+                            </select>
+                            <input type="text" placeholder="追跡番号" class="num-input bg-zinc-950 border border-zinc-800 text-sm p-2 rounded-lg outline-none h-10 focus:border-zinc-500">
+                            <input type="text" placeholder="品名メモ" class="memo-input bg-zinc-950 border border-zinc-800 text-sm p-2 rounded-lg outline-none h-10 focus:border-zinc-500">
+                        </div>
+                        <div class="grid grid-cols-[80px_1fr_1fr] gap-2 items-center row-entry">
+                            <select class="carrier-sel bg-zinc-800 text-[10px] p-2 rounded-lg outline-none border border-zinc-700 h-10">
+                                <option value="yamato">ヤマト</option><option value="sagawa">佐川</option><option value="post">郵便</option>
+                            </select>
+                            <input type="text" placeholder="追跡番号" class="num-input bg-zinc-950 border border-zinc-800 text-sm p-2 rounded-lg outline-none h-10 focus:border-zinc-500">
+                            <input type="text" placeholder="品名メモ" class="memo-input bg-zinc-950 border border-zinc-800 text-sm p-2 rounded-lg outline-none h-10 focus:border-zinc-500">
+                        </div>
+                        <div class="grid grid-cols-[80px_1fr_1fr] gap-2 items-center row-entry">
+                            <select class="carrier-sel bg-zinc-800 text-[10px] p-2 rounded-lg outline-none border border-zinc-700 h-10">
+                                <option value="yamato">ヤマト</option><option value="sagawa">佐川</option><option value="post">郵便</option>
+                            </select>
+                            <input type="text" placeholder="追跡番号" class="num-input bg-zinc-950 border border-zinc-800 text-sm p-2 rounded-lg outline-none h-10 focus:border-zinc-500">
+                            <input type="text" placeholder="品名メモ" class="memo-input bg-zinc-950 border border-zinc-800 text-sm p-2 rounded-lg outline-none h-10 focus:border-zinc-500">
+                        </div>
+                        <div class="grid grid-cols-[80px_1fr_1fr] gap-2 items-center row-entry">
+                            <select class="carrier-sel bg-zinc-800 text-[10px] p-2 rounded-lg outline-none border border-zinc-700 h-10">
+                                <option value="yamato">ヤマト</option><option value="sagawa">佐川</option><option value="post">郵便</option>
+                            </select>
+                            <input type="text" placeholder="追跡番号" class="num-input bg-zinc-950 border border-zinc-800 text-sm p-2 rounded-lg outline-none h-10 focus:border-zinc-500">
+                            <input type
