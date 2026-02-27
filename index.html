@@ -55,7 +55,6 @@
                 
                 <div class="space-y-1.5 mb-4">
                     <script>
-                        // 備考リストの更新
                         const remarkOptionsHtml = `
                             <option value="GEO">GEO</option>
                             <option value="2nd">2nd</option>
@@ -127,8 +126,8 @@
         
         document.getElementById('commonShipDate').value = new Date().toISOString().split('T')[0];
 
+        // 一括削除 (ポップアップなし)
         function clearAllInputs() {
-            if(!confirm("入力した情報をすべて削除しますか？")) return;
             document.querySelectorAll('.carrier-sel').forEach(el => { el.value = "none"; updateCarrierColor(el); });
             document.querySelectorAll('.num-input').forEach(el => el.value = "");
             document.querySelectorAll('.row-time-sel').forEach(el => el.value = "なし");
@@ -146,7 +145,7 @@
 
         function addAll() {
             const rows = document.querySelectorAll('.row-entry');
-            const items = JSON.parse(localStorage.getItem('delivery_final_v5') || '[]');
+            const items = JSON.parse(localStorage.getItem('delivery_final_v6') || '[]');
             const shipDateStr = document.getElementById('commonShipDate').value;
 
             rows.forEach(row => {
@@ -168,7 +167,7 @@
                     updateCarrierColor(carrierSel);
                 }
             });
-            localStorage.setItem('delivery_final_v5', JSON.stringify(items));
+            localStorage.setItem('delivery_final_v6', JSON.stringify(items));
             render();
 
             document.getElementById('commonCarrier').selectedIndex = 0;
@@ -178,24 +177,24 @@
         }
 
         function remove(id) {
-            let items = JSON.parse(localStorage.getItem('delivery_final_v5') || '[]');
-            localStorage.setItem('delivery_final_v5', JSON.stringify(items.filter(i => i.id !== id)));
+            let items = JSON.parse(localStorage.getItem('delivery_final_v6') || '[]');
+            localStorage.setItem('delivery_final_v6', JSON.stringify(items.filter(i => i.id !== id)));
             render();
         }
 
         function updateDate(id, val) {
-            let items = JSON.parse(localStorage.getItem('delivery_final_v5') || '[]');
+            let items = JSON.parse(localStorage.getItem('delivery_final_v6') || '[]');
             const item = items.find(i => i.id === id);
-            if (item) { item.deliveryDateRaw = val; localStorage.setItem('delivery_final_v5', JSON.stringify(items)); render(); }
+            if (item) { item.deliveryDateRaw = val; localStorage.setItem('delivery_final_v6', JSON.stringify(items)); render(); }
         }
         function updateTime(id, val) {
-            let items = JSON.parse(localStorage.getItem('delivery_final_v5') || '[]');
+            let items = JSON.parse(localStorage.getItem('delivery_final_v6') || '[]');
             const item = items.find(i => i.id === id);
-            if (item) { item.timeSlot = val; localStorage.setItem('delivery_final_v5', JSON.stringify(items)); render(); }
+            if (item) { item.timeSlot = val; localStorage.setItem('delivery_final_v6', JSON.stringify(items)); render(); }
         }
 
         function render() {
-            let items = JSON.parse(localStorage.getItem('delivery_final_v5') || '[]');
+            let items = JSON.parse(localStorage.getItem('delivery_final_v6') || '[]');
             const listEl = document.getElementById('list');
             if (items.length === 0) { listEl.innerHTML = '<p class="text-center py-10 text-slate-300 font-bold text-[10px]">荷物はありません</p>'; return; }
 
