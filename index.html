@@ -8,12 +8,7 @@
     <title>配送追跡</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* スワイプ削除用のスタイル */
-        .swipe-container { position: relative; overflow: hidden; border-radius: 1.25rem; touch-action: pan-y; margin-bottom: 0.6rem; background: #ef4444; }
-        .swipe-content { position: relative; z-index: 10; transition: transform 0.2s ease-out; background: white; border-radius: 1.25rem; }
-        .swipe-action { position: absolute; right: 0; top: 0; bottom: 0; width: 80px; display: flex; items-center; justify-content: center; font-weight: bold; color: white; z-index: 1; padding-top: 30px; font-size: 11px; }
-
-        /* 業者別の枠線カラー（4px） */
+        /* 業者別の枠線カラー */
         .border-post { border-color: #ef4444 !important; }
         .border-yamato { border-color: #fbbf24 !important; }
         .border-sagawa { border-color: #2563eb !important; }
@@ -34,7 +29,7 @@
         body { overflow-x: hidden; width: 100%; -webkit-font-smoothing: antialiased; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen p-2 md:p-4 font-sans text-slate-800 text-[12px] md:text-sm leading-relaxed">
+<body class="bg-slate-50 min-h-screen p-2 md:p-4 font-sans text-slate-800 text-[12px] md:text-sm leading-relaxed tracking-tight">
     <div class="max-w-xl mx-auto">
         <header class="mb-3 text-center py-1">
             <h1 class="text-xl font-bold text-slate-800">配送一括追跡</h1>
@@ -43,7 +38,7 @@
         <main>
             <div class="mb-5 bg-white p-3 rounded-[1.5rem] shadow-sm border border-slate-200">
                 <div class="flex justify-end items-center mb-3">
-                    <input type="date" id="commonShipDate" class="bg-slate-100 text-[10px] font-bold p-1 px-2 rounded-lg border border-slate-200">
+                    <input type="date" id="commonShipDate" class="bg-slate-100 text-[10px] font-bold p-1 px-2 rounded-lg border border-slate-200 outline-none">
                 </div>
                 <div class="space-y-1.5 mb-4">
                     <script>
@@ -71,7 +66,7 @@
                 </div>
             </div>
 
-            <div id="list" class="space-y-2 pb-20 px-1"></div>
+            <div id="list" class="space-y-2 pb-20"></div>
         </main>
     </div>
 
@@ -88,7 +83,7 @@
 
         function addAll() {
             const rows = document.querySelectorAll('.row-entry');
-            const items = JSON.parse(localStorage.getItem('delivery_v_final_swipe') || '[]');
+            const items = JSON.parse(localStorage.getItem('delivery_v_unified_h') || '[]');
             rows.forEach(row => {
                 const carrier = row.querySelector('.carrier-sel').value;
                 const num = row.querySelector('.num-input').value.trim();
@@ -98,76 +93,54 @@
                     row.querySelector('.num-input').value = '';
                 }
             });
-            localStorage.setItem('delivery_v_final_swipe', JSON.stringify(items));
+            localStorage.setItem('delivery_v_unified_h', JSON.stringify(items));
             render();
             syncTimeSlots("なし");
         }
 
         function remove(id) {
-            let items = JSON.parse(localStorage.getItem('delivery_v_final_swipe') || '[]');
-            localStorage.setItem('delivery_v_final_swipe', JSON.stringify(items.filter(i => i.id !== id)));
+            let items = JSON.parse(localStorage.getItem('delivery_v_unified_h') || '[]');
+            localStorage.setItem('delivery_v_unified_h', JSON.stringify(items.filter(i => i.id !== id)));
             render();
         }
 
         function render() {
-            const items = JSON.parse(localStorage.getItem('delivery_v_final_swipe') || '[]');
+            const items = JSON.parse(localStorage.getItem('delivery_v_unified_h') || '[]');
             const listEl = document.getElementById('list');
             if (items.length === 0) { listEl.innerHTML = '<p class="text-center py-10 text-slate-300 font-bold uppercase tracking-widest text-[10px]">荷物はありません</p>'; return; }
 
             listEl.innerHTML = items.map(item => {
                 const status = getAutoStatus(item.shipDateRaw);
                 return `
-                <div class="swipe-container" id="container-${item.id}">
-                    <div class="swipe-action">完了</div>
-                    <div class="swipe-content border-4 border-${item.carrier} p-1.5 flex items-center gap-1" 
-                         ontouchstart="handleTouchStart(event, ${item.id})" 
-                         ontouchmove="handleTouchMove(event, ${item.id})" 
-                         ontouchend="handleTouchEnd(event, ${item.id})">
-                        
-                        <div class="bg-slate-100 rounded-lg py-2 w-[42px] shrink-0 text-center border border-slate-200">
+                <div class="bg-white rounded-[1.25rem] border-4 border-${item.carrier} p-2 shadow-sm">
+                    <div class="flex items-center gap-1 mb-2">
+                        <div class="bg-slate-100 rounded-lg w-[42px] h-10 shrink-0 flex items-center justify-center border border-slate-200">
                             <p class="text-[12px] font-bold leading-none">${item.deliveryDate}</p>
                         </div>
                         
-                        <div class="bg-slate-100 rounded-lg py-2 w-[42px] shrink-0 text-center border border-slate-200">
-                            <p class="text-[9px] font-bold text-slate-500 leading-none">${item.timeSlot}</p>
+                        <div class="bg-slate-100 rounded-lg w-[42px] h-10 shrink-0 flex items-center justify-center border border-slate-200">
+                            <p class="text-[10px] font-bold text-slate-500 leading-none">${item.timeSlot}</p>
                         </div>
 
-                        <div class="bg-slate-800 text-white rounded-lg py-2 w-[50px] shrink-0 text-center">
-                            <p class="text-[9px] font-bold leading-tight">${status}</p>
+                        <div class="bg-slate-800 text-white rounded-lg h-10 flex-1 flex items-center justify-center">
+                            <p class="text-[10px] font-bold leading-tight">${status}</p>
                         </div>
 
-                        <a href="${urls[item.carrier]}${item.num}" target="_blank" class="bg-white border-2 border-slate-800 rounded-lg py-2 w-[50px] shrink-0 text-center active:bg-slate-100">
-                            <p class="text-[9px] font-bold">追跡</p>
+                        <a href="${urls[item.carrier]}${item.num}" target="_blank" class="bg-white border-2 border-slate-800 rounded-lg h-10 w-[55px] shrink-0 flex items-center justify-center active:bg-slate-100">
+                            <p class="text-[11px] font-bold">追跡</p>
                         </a>
 
-                        <div class="flex-1 min-w-0 text-right pr-0.5">
-                            <p class="text-[10px] font-bold text-slate-800 truncate leading-tight mb-0.5">${item.remark}</p>
-                            <p class="text-[8px] font-mono text-slate-400 truncate leading-none">${item.num}</p>
-                        </div>
+                        <button onclick="remove(${item.id})" class="bg-slate-100 border border-slate-200 rounded-lg h-10 w-[55px] shrink-0 flex items-center justify-center active:bg-red-500 active:text-white transition-colors">
+                            <p class="text-[11px] font-bold">完了</p>
+                        </button>
+                    </div>
+
+                    <div class="px-1 text-left">
+                        <span class="text-[11px] font-bold text-slate-800 mr-2">${item.remark}</span>
+                        <span class="text-[10px] font-mono text-slate-400 font-medium tracking-normal">${item.num}</span>
                     </div>
                 </div>`;
             }).join('');
-        }
-
-        let startX = 0, currentX = 0;
-        function handleTouchStart(e, id) { startX = e.touches[0].clientX; currentX = 0; }
-        function handleTouchMove(e, id) {
-            currentX = e.touches[0].clientX - startX;
-            const content = document.querySelector(`#container-${id} .swipe-content`);
-            if (currentX < 0) {
-                content.style.transition = 'none';
-                content.style.transform = `translateX(${Math.max(currentX, -100)}px)`;
-            }
-        }
-        function handleTouchEnd(e, id) {
-            const content = document.querySelector(`#container-${id} .swipe-content`);
-            content.style.transition = 'transform 0.2s ease-out';
-            if (currentX < -70) {
-                content.style.transform = 'translateX(-100%)';
-                setTimeout(() => remove(id), 200);
-            } else {
-                content.style.transform = 'translateX(0)';
-            }
         }
         render();
     </script>
