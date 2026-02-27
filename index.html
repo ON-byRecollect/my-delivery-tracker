@@ -8,10 +8,10 @@
     <title>配送追跡</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 業者別の背景色設定 */
-        .card-post { background-color: #ef4444 !important; color: white !important; }
-        .card-yamato { background-color: #fbbf24 !important; color: #1e293b !important; }
-        .card-sagawa { background-color: #2563eb !important; color: white !important; }
+        /* 業者別の背景色設定（薄いパステルカラー） */
+        .card-post { background-color: #fee2e2 !important; color: #1e293b !important; }   /* 赤-100 */
+        .card-yamato { background-color: #fef3c7 !important; color: #1e293b !important; } /* 黄-100 */
+        .card-sagawa { background-color: #dbeafe !important; color: #1e293b !important; } /* 青-100 */
         
         /* セレクトボックスの業者別背景色 */
         .opt-none { background-color: #f1f5f9; color: #64748b; }
@@ -84,13 +84,13 @@
 
         function addAll() {
             const rows = document.querySelectorAll('.row-entry');
-            const items = JSON.parse(localStorage.getItem('delivery_v_final_rounded') || '[]');
+            const items = JSON.parse(localStorage.getItem('delivery_v_sorted_pastel') || '[]');
             rows.forEach(row => {
                 const carrier = row.querySelector('.carrier-sel').value;
                 const num = row.querySelector('.num-input').value.trim();
                 const remark = row.querySelector('.remark-sel').value;
                 if (num && carrier !== "none") {
-                    items.unshift({ id: Date.now() + Math.random(), carrier, num, remark: remark === "選択" ? "荷物" : remark, shipDateRaw: document.getElementById('commonShipDate').value, deliveryDate: formatDateShort(new Date(new Date(document.getElementById('commonShipDate').value).getTime() + 172800000)), timeSlot: row.querySelector('.row-time-sel').value });
+                    items.push({ id: Date.now() + Math.random(), carrier, num, remark: remark === "選択" ? "荷物" : remark, shipDateRaw: document.getElementById('commonShipDate').value, deliveryDate: formatDateShort(new Date(new Date(document.getElementById('commonShipDate').value).getTime() + 172800000)), timeSlot: row.querySelector('.row-time-sel').value });
                     row.querySelector('.num-input').value = '';
                     row.querySelector('.remark-sel').value = "選択";
                     const carrierSel = row.querySelector('.carrier-sel');
@@ -98,26 +98,36 @@
                     updateCarrierColor(carrierSel);
                 }
             });
-            localStorage.setItem('delivery_v_final_rounded', JSON.stringify(items));
+            localStorage.setItem('delivery_v_sorted_pastel', JSON.stringify(items));
             render();
             syncTimeSlots("なし");
         }
 
         function remove(id) {
-            let items = JSON.parse(localStorage.getItem('delivery_v_final_rounded') || '[]');
-            localStorage.setItem('delivery_v_final_rounded', JSON.stringify(items.filter(i => i.id !== id)));
+            let items = JSON.parse(localStorage.getItem('delivery_v_sorted_pastel') || '[]');
+            localStorage.setItem('delivery_v_sorted_pastel', JSON.stringify(items.filter(i => i.id !== id)));
             render();
         }
 
         function render() {
-            const items = JSON.parse(localStorage.getItem('delivery_v_final_rounded') || '[]');
+            let items = JSON.parse(localStorage.getItem('delivery_v_sorted_pastel') || '[]');
             const listEl = document.getElementById('list');
             if (items.length === 0) { listEl.innerHTML = '<p class="text-center py-10 text-slate-300 font-bold uppercase tracking-widest text-[10px]">荷物はありません</p>'; return; }
 
-            listEl.innerHTML = items.map(item => {
-                const isYamato = item.carrier === 'yamato';
-                const shadowColor = isYamato ? 'shadow-black/5' : 'shadow-black/10';
+            // 自動並び替えロジック
+            const timePriority = { "なし": 0, "8-12": 1, "14-16": 2, "16-18": 3, "18-20": 4, "19-21": 5 };
+            items.sort((a, b) => {
+                // 1. 日付で比較 (2026年想定)
+                const dateA = new Date(`2026/${a.deliveryDate}`);
+                const dateB = new Date(`2026/${b.deliveryDate}`);
+                if (dateA.getTime() !== dateB.getTime()) {
+                    return dateA - dateB;
+                }
+                // 2. 同じ日付なら時間指定の優先順位で比較
+                return (timePriority[a.timeSlot] || 0) - (timePriority[b.timeSlot] || 0);
+            });
 
+            listEl.innerHTML = items.map(item => {
                 return `
                 <div class="card-${item.carrier} rounded-[1.25rem] p-2 shadow-sm flex items-center gap-1.5 transition-all">
                     <div class="bg-white rounded-[1.25rem] w-[50px] h-10 shrink-0 flex items-center justify-center shadow-sm">
@@ -133,11 +143,11 @@
                     </a>
 
                     <div class="flex-1 min-w-0 text-left px-1 flex flex-col justify-center">
-                        <p class="text-[11px] font-bold truncate leading-tight mb-0.5">${item.remark}</p>
-                        <p class="text-[9px] font-mono truncate leading-none opacity-80">${item.num}</p>
+                        <p class="text-[11px] font-bold truncate leading-tight mb-0.5 text-slate-800">${item.remark}</p>
+                        <p class="text-[9px] font-mono truncate leading-none text-slate-600 opacity-80">${item.num}</p>
                     </div>
 
-                    <button onclick="remove(${item.id})" class="bg-slate-200 rounded-[1.25rem] h-10 w-[50px] shrink-0 flex items-center justify-center active:bg-red-500 active:text-white transition-colors shadow-sm">
+                    <button onclick="remove(${item.id})" class="bg-white/40 backdrop-blur-sm rounded-[1.25rem] h-10 w-[50px] shrink-0 flex items-center justify-center active:bg-red-500 active:text-white transition-colors shadow-sm">
                         <p class="text-[11px] font-bold text-slate-800">完了</p>
                     </button>
                 </div>`;
