@@ -76,14 +76,10 @@
 
         function syncTimeSlots(val) { document.querySelectorAll('.row-time-sel').forEach(sel => sel.value = val); }
         function formatDateShort(dateObj) { return `${dateObj.getMonth() + 1}/${dateObj.getDate()}`; }
-        function getAutoStatus(shipDateStr) {
-            const diffDays = Math.floor((new Date().setHours(0,0,0,0) - new Date(shipDateStr).setHours(0,0,0,0)) / 86400000);
-            return diffDays === 0 ? "発送済" : diffDays === 1 ? "輸送中" : "配達予定";
-        }
 
         function addAll() {
             const rows = document.querySelectorAll('.row-entry');
-            const items = JSON.parse(localStorage.getItem('delivery_v_unified_h') || '[]');
+            const items = JSON.parse(localStorage.getItem('delivery_v_no_status') || '[]');
             rows.forEach(row => {
                 const carrier = row.querySelector('.carrier-sel').value;
                 const num = row.querySelector('.num-input').value.trim();
@@ -93,51 +89,46 @@
                     row.querySelector('.num-input').value = '';
                 }
             });
-            localStorage.setItem('delivery_v_unified_h', JSON.stringify(items));
+            localStorage.setItem('delivery_v_no_status', JSON.stringify(items));
             render();
             syncTimeSlots("なし");
         }
 
         function remove(id) {
-            let items = JSON.parse(localStorage.getItem('delivery_v_unified_h') || '[]');
-            localStorage.setItem('delivery_v_unified_h', JSON.stringify(items.filter(i => i.id !== id)));
+            let items = JSON.parse(localStorage.getItem('delivery_v_no_status') || '[]');
+            localStorage.setItem('delivery_v_no_status', JSON.stringify(items.filter(i => i.id !== id)));
             render();
         }
 
         function render() {
-            const items = JSON.parse(localStorage.getItem('delivery_v_unified_h') || '[]');
+            const items = JSON.parse(localStorage.getItem('delivery_v_no_status') || '[]');
             const listEl = document.getElementById('list');
             if (items.length === 0) { listEl.innerHTML = '<p class="text-center py-10 text-slate-300 font-bold uppercase tracking-widest text-[10px]">荷物はありません</p>'; return; }
 
             listEl.innerHTML = items.map(item => {
-                const status = getAutoStatus(item.shipDateRaw);
                 return `
                 <div class="bg-white rounded-[1.25rem] border-4 border-${item.carrier} p-2 shadow-sm">
-                    <div class="flex items-center gap-1 mb-2">
-                        <div class="bg-slate-100 rounded-lg w-[42px] h-10 shrink-0 flex items-center justify-center border border-slate-200">
-                            <p class="text-[12px] font-bold leading-none">${item.deliveryDate}</p>
+                    <div class="flex items-center gap-1.5 mb-2">
+                        <div class="bg-slate-100 rounded-lg w-[45px] h-10 shrink-0 flex items-center justify-center border border-slate-200">
+                            <p class="text-[13px] font-bold leading-none">${item.deliveryDate}</p>
                         </div>
                         
-                        <div class="bg-slate-100 rounded-lg w-[42px] h-10 shrink-0 flex items-center justify-center border border-slate-200">
-                            <p class="text-[10px] font-bold text-slate-500 leading-none">${item.timeSlot}</p>
+                        <div class="bg-slate-100 rounded-lg w-[45px] h-10 shrink-0 flex items-center justify-center border border-slate-200">
+                            <p class="text-[11px] font-bold text-slate-500 leading-none">${item.timeSlot}</p>
                         </div>
 
-                        <div class="bg-slate-800 text-white rounded-lg h-10 flex-1 flex items-center justify-center">
-                            <p class="text-[10px] font-bold leading-tight">${status}</p>
-                        </div>
-
-                        <a href="${urls[item.carrier]}${item.num}" target="_blank" class="bg-white border-2 border-slate-800 rounded-lg h-10 w-[55px] shrink-0 flex items-center justify-center active:bg-slate-100">
-                            <p class="text-[11px] font-bold">追跡</p>
+                        <a href="${urls[item.carrier]}${item.num}" target="_blank" class="bg-white border-2 border-slate-800 rounded-lg h-10 flex-1 flex items-center justify-center active:bg-slate-100 transition-colors">
+                            <p class="text-[12px] font-bold">追跡</p>
                         </a>
 
-                        <button onclick="remove(${item.id})" class="bg-slate-100 border border-slate-200 rounded-lg h-10 w-[55px] shrink-0 flex items-center justify-center active:bg-red-500 active:text-white transition-colors">
-                            <p class="text-[11px] font-bold">完了</p>
+                        <button onclick="remove(${item.id})" class="bg-slate-100 border border-slate-200 rounded-lg h-10 w-[60px] shrink-0 flex items-center justify-center active:bg-red-500 active:text-white transition-colors">
+                            <p class="text-[12px] font-bold">完了</p>
                         </button>
                     </div>
 
-                    <div class="px-1 text-left">
-                        <span class="text-[11px] font-bold text-slate-800 mr-2">${item.remark}</span>
-                        <span class="text-[10px] font-mono text-slate-400 font-medium tracking-normal">${item.num}</span>
+                    <div class="px-1 text-left flex items-baseline gap-2 overflow-hidden">
+                        <span class="text-[12px] font-bold text-slate-800 shrink-0">${item.remark}</span>
+                        <span class="text-[10px] font-mono text-slate-400 font-medium truncate">${item.num}</span>
                     </div>
                 </div>`;
             }).join('');
