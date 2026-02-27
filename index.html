@@ -13,11 +13,7 @@
         .border-yamato { border-color: #fbbf24 !important; }
         .border-sagawa { border-color: #2563eb !important; }
         
-        .badge-post { background-color: #ef4444; color: white; }
-        .badge-yamato { background-color: #fbbf24; color: #1e293b; }
-        .badge-sagawa { background-color: #2563eb; color: white; }
-        
-        /* セレクトボックスの背景色 */
+        /* セレクトボックスの業者別背景色 */
         .opt-none { background-color: #f1f5f9; color: #64748b; }
         .opt-post { background-color: #ef4444 !important; color: white !important; }
         .opt-yamato { background-color: #fbbf24 !important; color: #1e293b !important; }
@@ -25,30 +21,29 @@
 
         input::placeholder { color: #94a3b8; font-weight: 400; }
 
-        /* iPhoneの横はみ出しを徹底防止するグリッド設定 */
+        /* iPhone SE/横幅制限対応 */
         @media (max-width: 640px) {
             .row-grid { 
-                grid-template-columns: 65px 1fr 68px 68px; /* 各幅をさらに数pxずつ縮小 */
+                grid-template-columns: 65px 1fr 68px 68px;
                 gap: 2px; 
             }
             .row-grid select, .row-grid input { 
                 font-size: 10px; 
                 padding: 4px 2px; 
                 height: 36px;
-                min-width: 0; /* はみ出し防止の要 */
+                min-width: 0;
             }
         }
         
-        /* 横スクロールを完全に殺す */
         body {
             overflow-x: hidden;
-            position: relative;
             width: 100%;
+            -webkit-font-smoothing: antialiased;
         }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen p-2 md:p-4 font-sans text-slate-800 text-[12px] md:text-sm leading-relaxed">
-    <div class="max-w-xl mx-auto overflow-hidden">
+    <div class="max-w-xl mx-auto">
         <header class="mb-3 text-center py-1">
             <h1 class="text-xl font-bold text-slate-800">配送一括追跡</h1>
         </header>
@@ -72,7 +67,7 @@
                             <option value="プライベート">個人</option><option value="その他">他</option>
                         `;
                         const timeOptions = `
-                            <option value="指定無">指定無</option><option value="8-12">8-12</option>
+                            <option value="なし">なし</option><option value="8-12">8-12</option>
                             <option value="14-16">14-16</option><option value="16-18">16-18</option>
                             <option value="18-20">18-20</option><option value="19-21">19-21</option>
                         `;
@@ -87,7 +82,7 @@
                                     <option value="none" selected>-</option>
                                     <option value="yamato">ヤマト</option>
                                     <option value="sagawa">佐川</option>
-                                    <option value="post">郵便</option>
+                                    <option value="post">JP</option>
                                 </select>
                                 <input type="text" placeholder="追跡番号" class="num-input bg-slate-50 rounded-lg border border-slate-200 outline-none p-1 font-bold">
                                 <select class="row-time-sel bg-slate-50 font-bold rounded-lg border border-slate-200 outline-none p-1">
@@ -107,7 +102,7 @@
                         <span class="text-[10px] font-bold text-slate-500 whitespace-nowrap">一括指定:</span>
                         <select id="commonTimeSlot" onchange="syncTimeSlots(this.value)" class="w-full bg-transparent text-[11px] outline-none font-bold text-slate-800 text-center">
                             <option value="" disabled selected>時間を一括設定</option>
-                            <option value="指定無">指定無</option><option value="8-12">8-12</option>
+                            <option value="なし">なし</option><option value="8-12">8-12</option>
                             <option value="14-16">14-16</option><option value="16-18">16-18</option>
                             <option value="18-20">18-20</option><option value="19-21">19-21</option>
                         </select>
@@ -133,7 +128,6 @@
             yamato: "https://toi.kuronekoyamato.co.jp/cgi-bin/tneko?number01=",
             sagawa: "https://k2k.sagawa-exp.co.jp/p/web/okurijosearch.do?okurijoNo="
         };
-        const names = { post: "郵便", yamato: "ヤマト", sagawa: "佐川" };
 
         document.getElementById('commonShipDate').value = new Date().toISOString().split('T')[0];
 
@@ -159,7 +153,7 @@
         function addAll() {
             const rows = document.querySelectorAll('.row-entry');
             const shipDateStr = document.getElementById('commonShipDate').value;
-            const items = JSON.parse(localStorage.getItem('delivery_v_final_iphone') || '[]');
+            const items = JSON.parse(localStorage.getItem('delivery_v_final_jp_label') || '[]');
             
             rows.forEach(row => {
                 const carrier = row.querySelector('.carrier-sel').value;
@@ -186,21 +180,21 @@
                     updateCarrierColor(carrierSel);
                 }
             });
-            localStorage.setItem('delivery_v_final_iphone', JSON.stringify(items));
+            localStorage.setItem('delivery_v_final_jp_label', JSON.stringify(items));
             render();
             document.getElementById('commonTimeSlot').selectedIndex = 0;
-            syncTimeSlots("指定無");
+            syncTimeSlots("なし");
         }
 
         function remove(id) {
-            let items = JSON.parse(localStorage.getItem('delivery_v_final_iphone') || '[]');
+            let items = JSON.parse(localStorage.getItem('delivery_v_final_jp_label') || '[]');
             items = items.filter(item => item.id !== id);
-            localStorage.setItem('delivery_v_final_iphone', JSON.stringify(items));
+            localStorage.setItem('delivery_v_final_jp_label', JSON.stringify(items));
             render();
         }
 
         function render() {
-            const items = JSON.parse(localStorage.getItem('delivery_v_final_iphone') || '[]');
+            const items = JSON.parse(localStorage.getItem('delivery_v_final_jp_label') || '[]');
             const listEl = document.getElementById('list');
             document.getElementById('count').textContent = `${items.length} 件`;
             
@@ -212,39 +206,34 @@
             listEl.innerHTML = items.map(item => {
                 const status = getAutoStatus(item.shipDateRaw);
                 return `
-                <div class="bg-white rounded-[1.2rem] border-[3px] border-${item.carrier} flex flex-col overflow-hidden shadow-sm">
-                    <div class="p-2.5">
-                        <div class="flex justify-between items-start mb-1.5">
-                            <span class="text-[8px] font-bold px-1.5 py-0.5 rounded-full badge-${item.carrier} opacity-80">
-                                ${names[item.carrier]}
-                            </span>
-                            <button onclick="remove(${item.id})" class="bg-slate-100 text-slate-400 text-[9px] font-bold px-2 py-0.5 rounded-md active:bg-red-500 active:text-white transition-colors">
+                <div class="bg-white rounded-[1.5rem] border-[4px] border-${item.carrier} flex flex-col overflow-hidden shadow-sm">
+                    <div class="p-3">
+                        <div class="flex justify-end mb-1">
+                            <button onclick="remove(${item.id})" class="bg-slate-100 text-slate-400 text-[10px] font-bold px-2.5 py-1 rounded-lg active:bg-red-500 active:text-white transition-colors">
                                 完了
                             </button>
                         </div>
                         
-                        <div class="text-center mb-2">
-                            <span class="bg-slate-800 text-white text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-tighter inline-block">
+                        <div class="text-center mb-2.5">
+                            <span class="bg-slate-800 text-white text-[11px] font-bold px-3 py-1.5 rounded-full uppercase tracking-tighter inline-block">
                                 ${status}
                             </span>
                         </div>
 
-                        <h3 class="font-bold text-[11px] text-slate-800 truncate text-center mb-0.5">${item.remark}</h3>
-                        <p class="text-[9px] font-mono text-slate-400 mb-3 text-center truncate px-0.5">${item.num}</p>
+                        <h3 class="font-bold text-[12px] text-slate-800 truncate text-center mb-0.5 tracking-tight">${item.remark}</h3>
+                        <p class="text-[10px] font-mono text-slate-400 mb-4 text-center truncate px-0.5">${item.num}</p>
                         
-                        <div class="flex gap-1 mb-2">
-                            <div class="flex-1 bg-orange-500 rounded-lg py-1 text-white text-center">
-                                <p class="text-[7px] font-bold opacity-90 leading-none mb-0.5">到着目安</p>
-                                <p class="text-[12px] font-bold leading-none">${item.deliveryDate}</p>
+                        <div class="flex gap-1.5 mb-2.5">
+                            <div class="flex-1 bg-orange-500 rounded-xl py-2.5 text-white text-center flex items-center justify-center">
+                                <p class="text-lg font-bold leading-none">${item.deliveryDate}</p>
                             </div>
-                            <div class="flex-1 bg-slate-50 rounded-lg py-1 border border-slate-200 text-center flex flex-col justify-center overflow-hidden">
-                                <p class="text-[7px] text-slate-400 font-bold leading-none mb-0.5">時間</p>
-                                <p class="text-[8px] font-bold text-slate-600 leading-none truncate px-0.5">${item.timeSlot}</p>
+                            <div class="flex-1 bg-slate-50 rounded-xl py-2.5 border border-slate-200 text-center flex items-center justify-center overflow-hidden">
+                                <p class="text-[11px] font-bold text-slate-600 leading-none truncate px-0.5">${item.timeSlot}</p>
                             </div>
                         </div>
 
-                        <a href="${urls[item.carrier]}${item.num}" target="_blank" class="block w-full bg-slate-800 text-white text-center py-2 rounded-lg text-[10px] font-bold shadow-sm active:bg-slate-700">
-                            追跡サイト
+                        <a href="${urls[item.carrier]}${item.num}" target="_blank" class="block w-full bg-slate-800 text-white text-center py-3 rounded-xl text-[11px] font-bold active:bg-slate-700 shadow-sm">
+                            追跡
                         </a>
                     </div>
                 </div>
