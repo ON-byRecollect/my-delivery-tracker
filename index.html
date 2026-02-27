@@ -13,11 +13,6 @@
         .border-yamato { border-color: #fbbf24 !important; }
         .border-sagawa { border-color: #2563eb !important; }
         
-        /* 業者別の背景色（日付ボックス用） */
-        .bg-post { background-color: #ef4444 !important; color: white !important; }
-        .bg-yamato { background-color: #fbbf24 !important; color: #1e293b !important; }
-        .bg-sagawa { background-color: #2563eb !important; color: white !important; }
-        
         /* セレクトボックスの業者別背景色 */
         .opt-none { background-color: #f1f5f9; color: #64748b; }
         .opt-post { background-color: #ef4444 !important; color: white !important; }
@@ -26,6 +21,7 @@
 
         input::placeholder { color: #94a3b8; font-weight: 400; }
 
+        /* iPhone SE/横幅制限対応 */
         @media (max-width: 640px) {
             .row-grid { 
                 grid-template-columns: 65px 1fr 68px 68px;
@@ -46,7 +42,7 @@
         }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen p-2 md:p-4 font-sans text-slate-800 text-[12px] md:text-sm leading-relaxed">
+<body class="bg-slate-50 min-h-screen p-2 md:p-4 font-sans text-slate-800 text-[12px] md:text-sm leading-relaxed tracking-tight">
     <div class="max-w-xl mx-auto">
         <header class="mb-3 text-center py-1">
             <h1 class="text-xl font-bold text-slate-800">配送一括追跡</h1>
@@ -57,21 +53,20 @@
                 <div class="flex justify-end items-center mb-3 px-1">
                     <div class="flex items-center gap-1">
                         <span class="text-[9px] font-medium text-slate-400">発送日:</span>
-                        <input type="date" id="commonShipDate" class="bg-slate-100 text-[10px] font-bold p-1 px-1 rounded-lg outline-none border border-slate-200">
+                        <input type="date" id="commonShipDate" class="bg-slate-100 text-[10px] font-bold p-1 px-1 rounded-lg outline-none border border-slate-200 focus:border-slate-300 transition-colors">
                     </div>
                 </div>
                 
                 <div class="space-y-1.5 mb-4">
                     <script>
                         const remarkOptions = `
-                            <option value="選択" disabled selected>選択</option>
                             <option value="GEO">GEO</option><option value="2nd">2nd</option>
                             <option value="ハードオフ">ハード</option><option value="Nojima">Nojima</option>
                             <option value="じゃんぱら">じゃん</option><option value="ELECOM">ELECOM</option>
                             <option value="プライベート">個人</option><option value="その他">他</option>
                         `;
                         const timeOptions = `
-                            <option value="なし">なし</option><option value="8-12">8-12</option>
+                            <option value="指定無">指定無</option><option value="8-12">8-12</option>
                             <option value="14-16">14-16</option><option value="16-18">16-18</option>
                             <option value="18-20">18-20</option><option value="19-21">19-21</option>
                         `;
@@ -82,19 +77,20 @@
                         for(let i=0; i<5; i++) {
                             document.write(`
                             <div class="grid grid-cols-[65px_1fr_68px_68px] gap-1 row-entry items-center row-grid">
-                                <select class="carrier-sel font-bold rounded-lg border border-slate-200 outline-none p-1 opt-none" onchange="updateCarrierColor(this)">
+                                <select class="carrier-sel font-bold rounded-lg border border-slate-200 outline-none p-1 opt-none transition-colors" onchange="updateCarrierColor(this)">
                                     <option value="none" selected>-</option>
                                     <option value="yamato">ヤマト</option>
                                     <option value="sagawa">佐川</option>
                                     <option value="post">JP</option>
                                 </select>
-                                <input type="text" placeholder="追跡番号" class="num-input bg-slate-50 rounded-lg border border-slate-200 outline-none p-1 font-bold">
-                                <select class="row-time-sel bg-slate-50 font-bold rounded-lg border border-slate-200 outline-none p-1">
+                                <input type="text" placeholder="追跡番号" class="num-input bg-slate-50 rounded-lg border border-slate-200 outline-none p-1 font-bold transition-colors">
+                                <select class="row-time-sel bg-slate-50 font-bold rounded-lg border border-slate-200 outline-none p-1 transition-colors">
                                     ${timeOptions}
                                 </select>
-                                <select class="remark-sel bg-slate-50 font-bold rounded-lg border border-slate-200 outline-none p-1">
+                                <input type="text" list="remark-options" placeholder="備考" class="remark-input bg-slate-50 font-bold rounded-lg border border-slate-200 outline-none p-1 transition-colors">
+                                <datalist id="remark-options">
                                     ${remarkOptions}
-                                </select>
+                                </datalist>
                             </div>
                             `);
                         }
@@ -106,12 +102,12 @@
                         <span class="text-[10px] font-bold text-slate-500 whitespace-nowrap">一括指定:</span>
                         <select id="commonTimeSlot" onchange="syncTimeSlots(this.value)" class="w-full bg-transparent text-[11px] outline-none font-bold text-slate-800 text-center">
                             <option value="" disabled selected>時間を一括設定</option>
-                            <option value="なし">なし</option><option value="8-12">8-12</option>
+                            <option value="指定無">指定無</option><option value="8-12">8-12</option>
                             <option value="14-16">14-16</option><option value="16-18">16-18</option>
                             <option value="18-20">18-20</option><option value="19-21">19-21</option>
                         </select>
                     </div>
-                    <button onclick="addAll()" class="bg-slate-800 text-white font-bold py-3.5 rounded-xl text-sm active:scale-95 transition-transform mt-1 shadow-md">
+                    <button onclick="addAll()" class="bg-slate-800 text-white font-bold py-3.5 rounded-xl text-sm active:scale-95 transition-transform mt-1 shadow-md hover:bg-slate-700">
                         追跡を開始する
                     </button>
                 </div>
@@ -119,10 +115,10 @@
 
             <div class="flex items-center justify-between mb-3 px-2 text-[10px] font-bold text-slate-400">
                 <h2>追跡中の荷物</h2>
-                <span id="count" class="bg-slate-200 px-3 py-0.5 rounded-full text-slate-500">0 件</span>
+                <span id="count" class="bg-slate-200 px-3 py-0.5 rounded-full text-slate-500 font-bold tracking-widest">0 件</span>
             </div>
             
-            <div id="list" class="grid grid-cols-2 gap-2 pb-20"></div>
+            <div id="list" class="space-y-3 pb-20"></div>
         </main>
     </div>
 
@@ -157,12 +153,12 @@
         function addAll() {
             const rows = document.querySelectorAll('.row-entry');
             const shipDateStr = document.getElementById('commonShipDate').value;
-            const items = JSON.parse(localStorage.getItem('delivery_v_final_color_match') || '[]');
+            const items = JSON.parse(localStorage.getItem('delivery_final_minimal_pwa_v1') || '[]');
             
             rows.forEach(row => {
                 const carrier = row.querySelector('.carrier-sel').value;
                 const num = row.querySelector('.num-input').value.trim();
-                const remark = row.querySelector('.remark-sel').value;
+                const remark = row.querySelector('.remark-input').value.trim();
                 const timeSlot = row.querySelector('.row-time-sel').value;
                 
                 if (num && carrier !== "none") {
@@ -172,33 +168,33 @@
                     items.unshift({
                         id: Date.now() + Math.random(),
                         carrier, num, 
-                        remark: remark === "選択" ? "荷物" : remark,
+                        remark: remark || "荷物",
                         shipDateRaw: shipDateStr,
                         deliveryDate: formatDateShort(deliveryDate),
                         timeSlot: timeSlot
                     });
                     row.querySelector('.num-input').value = '';
-                    row.querySelector('.remark-sel').value = "選択";
+                    row.querySelector('.remark-input').value = '';
                     const carrierSel = row.querySelector('.carrier-sel');
                     carrierSel.value = "none";
                     updateCarrierColor(carrierSel);
                 }
             });
-            localStorage.setItem('delivery_v_final_color_match', JSON.stringify(items));
+            localStorage.setItem('delivery_final_minimal_pwa_v1', JSON.stringify(items));
             render();
             document.getElementById('commonTimeSlot').selectedIndex = 0;
-            syncTimeSlots("なし");
+            syncTimeSlots("指定無");
         }
 
         function remove(id) {
-            let items = JSON.parse(localStorage.getItem('delivery_v_final_color_match') || '[]');
+            let items = JSON.parse(localStorage.getItem('delivery_final_minimal_pwa_v1') || '[]');
             items = items.filter(item => item.id !== id);
-            localStorage.setItem('delivery_v_final_color_match', JSON.stringify(items));
+            localStorage.setItem('delivery_final_minimal_pwa_v1', JSON.stringify(items));
             render();
         }
 
         function render() {
-            const items = JSON.parse(localStorage.getItem('delivery_v_final_color_match') || '[]');
+            const items = JSON.parse(localStorage.getItem('delivery_final_minimal_pwa_v1') || '[]');
             const listEl = document.getElementById('list');
             document.getElementById('count').textContent = `${items.length} 件`;
             
@@ -210,35 +206,39 @@
             listEl.innerHTML = items.map(item => {
                 const status = getAutoStatus(item.shipDateRaw);
                 return `
-                <div class="bg-white rounded-[1.5rem] border-[4px] border-${item.carrier} flex flex-col overflow-hidden shadow-sm">
-                    <div class="p-3">
-                        <div class="flex justify-end mb-1">
-                            <button onclick="remove(${item.id})" class="bg-slate-100 text-slate-400 text-[10px] font-bold px-2.5 py-1 rounded-lg active:bg-red-500 active:text-white transition-colors">
-                                完了
-                            </button>
+                <div class="grid grid-cols-[auto_auto_1fr] gap-2 items-stretch mb-3 relative group">
+                    <div class="bg-slate-100 rounded-3xl flex flex-col items-center justify-center p-4 min-w-[90px] text-center shadow-sm border border-slate-200">
+                        <p class="text-xs font-bold text-slate-400 leading-none mb-1">到着日</p>
+                        <p class="text-5xl font-bold text-slate-800 leading-none">${item.deliveryDate}</p>
+                    </div>
+                    
+                    <div class="bg-slate-100 rounded-3xl flex flex-col items-center justify-center p-4 min-w-[90px] text-center shadow-sm border border-slate-200 overflow-hidden">
+                        <p class="text-xs font-bold text-slate-400 leading-none mb-1">指定時間</p>
+                        ${item.timeSlot === '指定無' ? 
+                            `<p class="text-xl font-bold text-slate-600 leading-tight">指定なし</p>` :
+                            `<p class="text-3xl font-bold text-slate-600 leading-none">${item.timeSlot.split('-')[0]}:00</p>
+                             <p class="text-slate-400 text-3xl font-bold leading-none">|</p>
+                             <p class="text-3xl font-bold text-slate-600 leading-none">${item.timeSlot.split('-')[1]}:00</p>`
+                        }
+                    </div>
+                    
+                    <div class="border-4 rounded-3xl overflow-hidden shadow-sm bg-slate-100 p-3 grid grid-cols-[auto_auto_1fr] gap-3 items-center border-${item.carrier}">
+                        <div class="bg-slate-800 text-white rounded-xl flex items-center justify-center p-4 h-full min-w-[80px]">
+                            <p class="text-sm font-bold leading-tight text-center uppercase tracking-wider">${status}</p>
                         </div>
                         
-                        <div class="text-center mb-2.5">
-                            <span class="bg-slate-800 text-white text-[11px] font-bold px-3 py-1.5 rounded-full uppercase tracking-tighter inline-block">
-                                ${status}
-                            </span>
-                        </div>
-
-                        <h3 class="font-bold text-[12px] text-slate-800 truncate text-center mb-0.5 tracking-tight">${item.remark}</h3>
-                        <p class="text-[10px] font-mono text-slate-400 mb-4 text-center truncate px-0.5">${item.num}</p>
-                        
-                        <div class="flex gap-1.5 mb-2.5">
-                            <div class="flex-1 rounded-xl py-2.5 text-center flex items-center justify-center bg-${item.carrier}">
-                                <p class="text-lg font-bold leading-none">${item.deliveryDate}</p>
-                            </div>
-                            <div class="flex-1 bg-slate-50 rounded-xl py-2.5 border border-slate-200 text-center flex items-center justify-center overflow-hidden">
-                                <p class="text-lg font-bold text-slate-600 leading-none truncate px-0.5">${item.timeSlot}</p>
-                            </div>
-                        </div>
-
-                        <a href="${urls[item.carrier]}${item.num}" target="_blank" class="block w-full bg-slate-800 text-white text-center py-3 rounded-xl text-[11px] font-bold active:bg-slate-700 shadow-sm">
-                            追跡
+                        <a href="${urls[item.carrier]}${item.num}" target="_blank" class="bg-white text-slate-800 rounded-xl flex items-center justify-center p-4 h-full min-w-[80px] border border-slate-300 shadow-inner hover:bg-slate-50 active:bg-slate-100 transition-colors">
+                            <p class="text-sm font-bold leading-tight text-center">追跡</p>
                         </a>
+                        
+                        <div class="text-right flex-1 min-w-0 pr-6">
+                            <p class="text-sm font-bold text-slate-800 truncate mb-1">${item.remark}</p>
+                            <p class="text-sm font-mono text-slate-600 truncate opacity-70">${item.num}</p>
+                        </div>
+                        
+                        <button onclick="remove(${item.id})" class="absolute right-3 top-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 active:opacity-100 active:scale-95 transition-all shadow-md">
+                            完了
+                        </button>
                     </div>
                 </div>
             `}).join('');
