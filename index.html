@@ -8,6 +8,11 @@
     <title>配送追跡</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
+        /* スワイプ削除用のスタイル */
+        .swipe-container { position: relative; overflow: hidden; border-radius: 1.5rem; touch-action: pan-y; margin-bottom: 0.75rem; background: #ef4444; }
+        .swipe-content { position: relative; z-index: 10; transition: transform 0.2s ease-out; background: white; border-radius: 1.5rem; }
+        .swipe-action { position: absolute; right: 0; top: 0; bottom: 0; width: 80px; display: flex; items-center; justify-content: center; font-weight: bold; color: white; z-index: 1; padding-top: 35px; font-size: 12px; }
+
         /* 業者別の枠線カラー */
         .border-post { border-color: #ef4444 !important; }
         .border-yamato { border-color: #fbbf24 !important; }
@@ -21,28 +26,15 @@
 
         input::placeholder { color: #94a3b8; font-weight: 400; }
 
-        /* iPhone SE/横幅制限対応 */
         @media (max-width: 640px) {
-            .row-grid { 
-                grid-template-columns: 65px 1fr 68px 68px;
-                gap: 2px; 
-            }
-            .row-grid select, .row-grid input { 
-                font-size: 10px; 
-                padding: 4px 2px; 
-                height: 36px;
-                min-width: 0;
-            }
+            .row-grid { grid-template-columns: 60px 1fr 65px 65px; gap: 2px; }
+            .row-grid select, .row-grid input { font-size: 10px; height: 36px; padding: 0 4px; }
         }
         
-        body {
-            overflow-x: hidden;
-            width: 100%;
-            -webkit-font-smoothing: antialiased;
-        }
+        body { overflow-x: hidden; width: 100%; -webkit-font-smoothing: antialiased; }
     </style>
 </head>
-<body class="bg-slate-50 min-h-screen p-2 md:p-4 font-sans text-slate-800 text-[12px] md:text-sm leading-relaxed tracking-tight">
+<body class="bg-slate-50 min-h-screen p-2 md:p-4 font-sans text-slate-800 text-[12px] md:text-sm leading-relaxed">
     <div class="max-w-xl mx-auto">
         <header class="mb-3 text-center py-1">
             <h1 class="text-xl font-bold text-slate-800">配送一括追跡</h1>
@@ -50,198 +42,130 @@
 
         <main>
             <div class="mb-5 bg-white p-3 rounded-[1.5rem] shadow-sm border border-slate-200">
-                <div class="flex justify-end items-center mb-3 px-1">
-                    <div class="flex items-center gap-1">
-                        <span class="text-[9px] font-medium text-slate-400">発送日:</span>
-                        <input type="date" id="commonShipDate" class="bg-slate-100 text-[10px] font-bold p-1 px-1 rounded-lg outline-none border border-slate-200 focus:border-slate-300 transition-colors">
-                    </div>
+                <div class="flex justify-end items-center mb-3">
+                    <input type="date" id="commonShipDate" class="bg-slate-100 text-[10px] font-bold p-1 px-2 rounded-lg border border-slate-200">
                 </div>
-                
                 <div class="space-y-1.5 mb-4">
                     <script>
-                        const remarkOptions = `
-                            <option value="GEO">GEO</option><option value="2nd">2nd</option>
-                            <option value="ハードオフ">ハード</option><option value="Nojima">Nojima</option>
-                            <option value="じゃんぱら">じゃん</option><option value="ELECOM">ELECOM</option>
-                            <option value="プライベート">個人</option><option value="その他">他</option>
-                        `;
-                        const timeOptions = `
-                            <option value="指定無">指定無</option><option value="8-12">8-12</option>
-                            <option value="14-16">14-16</option><option value="16-18">16-18</option>
-                            <option value="18-20">18-20</option><option value="19-21">19-21</option>
-                        `;
-                        function updateCarrierColor(el) {
-                            el.className = 'carrier-sel font-bold rounded-lg border border-slate-200 outline-none p-1 text-[9px] opt-' + el.value;
-                        }
-
+                        const remarkOptions = `<option value="GEO">GEO</option><option value="2nd">2nd</option><option value="ハードオフ">ハード</option><option value="Nojima">Nojima</option><option value="じゃんぱら">じゃん</option><option value="ELECOM">ELECOM</option><option value="プライベート">個人</option><option value="その他">他</option>`;
+                        const timeOptions = `<option value="なし">なし</option><option value="8-12">8-12</option><option value="14-16">14-16</option><option value="16-18">16-18</option><option value="18-20">18-20</option><option value="19-21">19-21</option>`;
+                        function updateCarrierColor(el) { el.className = 'carrier-sel font-bold rounded-lg border border-slate-200 outline-none text-[9px] opt-' + el.value; }
                         for(let i=0; i<5; i++) {
                             document.write(`
-                            <div class="grid grid-cols-[65px_1fr_68px_68px] gap-1 row-entry items-center row-grid">
-                                <select class="carrier-sel font-bold rounded-lg border border-slate-200 outline-none p-1 opt-none transition-colors" onchange="updateCarrierColor(this)">
-                                    <option value="none" selected>-</option>
-                                    <option value="yamato">ヤマト</option>
-                                    <option value="sagawa">佐川</option>
-                                    <option value="post">JP</option>
-                                </select>
-                                <input type="text" placeholder="追跡番号" class="num-input bg-slate-50 rounded-lg border border-slate-200 outline-none p-1 font-bold transition-colors">
-                                <select class="row-time-sel bg-slate-50 font-bold rounded-lg border border-slate-200 outline-none p-1 transition-colors">
-                                    ${timeOptions}
-                                </select>
-                                <input type="text" list="remark-options" placeholder="備考" class="remark-input bg-slate-50 font-bold rounded-lg border border-slate-200 outline-none p-1 transition-colors">
-                                <datalist id="remark-options">
-                                    ${remarkOptions}
-                                </datalist>
+                            <div class="grid grid-cols-[60px_1fr_65px_65px] gap-1 row-entry items-center row-grid">
+                                <select class="carrier-sel font-bold rounded-lg border border-slate-200 outline-none opt-none" onchange="updateCarrierColor(this)"><option value="none" selected>-</option><option value="yamato">ヤマト</option><option value="sagawa">佐川</option><option value="post">JP</option></select>
+                                <input type="text" placeholder="追跡番号" class="num-input bg-slate-50 rounded-lg border border-slate-200 outline-none font-bold">
+                                <select class="row-time-sel bg-slate-50 font-bold rounded-lg border border-slate-200 outline-none">${timeOptions}</select>
+                                <select class="remark-sel bg-slate-50 font-bold rounded-lg border border-slate-200 outline-none"><option value="選択" disabled selected>選択</option>${remarkOptions}</select>
                             </div>
                             `);
                         }
                     </script>
                 </div>
-
                 <div class="grid grid-cols-1 gap-2 pt-3 border-t border-slate-100">
-                    <div class="flex items-center gap-2 bg-slate-100 p-2 px-3 rounded-xl border border-slate-200">
-                        <span class="text-[10px] font-bold text-slate-500 whitespace-nowrap">一括指定:</span>
-                        <select id="commonTimeSlot" onchange="syncTimeSlots(this.value)" class="w-full bg-transparent text-[11px] outline-none font-bold text-slate-800 text-center">
-                            <option value="" disabled selected>時間を一括設定</option>
-                            <option value="指定無">指定無</option><option value="8-12">8-12</option>
-                            <option value="14-16">14-16</option><option value="16-18">16-18</option>
-                            <option value="18-20">18-20</option><option value="19-21">19-21</option>
-                        </select>
+                    <div class="bg-slate-100 p-2 rounded-xl border border-slate-200 flex items-center justify-center gap-2">
+                        <span class="text-[10px] font-bold text-slate-500">一括時間</span>
+                        <select id="commonTimeSlot" onchange="syncTimeSlots(this.value)" class="bg-transparent text-[11px] font-bold outline-none text-slate-800">${timeOptions}</select>
                     </div>
-                    <button onclick="addAll()" class="bg-slate-800 text-white font-bold py-3.5 rounded-xl text-sm active:scale-95 transition-transform mt-1 shadow-md hover:bg-slate-700">
-                        追跡を開始する
-                    </button>
+                    <button onclick="addAll()" class="bg-slate-800 text-white font-bold py-3.5 rounded-xl text-sm active:scale-95 transition-transform mt-1 shadow-md">追跡を開始する</button>
                 </div>
             </div>
 
-            <div class="flex items-center justify-between mb-3 px-2 text-[10px] font-bold text-slate-400">
-                <h2>追跡中の荷物</h2>
-                <span id="count" class="bg-slate-200 px-3 py-0.5 rounded-full text-slate-500 font-bold tracking-widest">0 件</span>
-            </div>
-            
-            <div id="list" class="space-y-3 pb-20"></div>
+            <div id="list" class="space-y-3 pb-20 px-1"></div>
         </main>
     </div>
 
     <script>
-        const urls = {
-            post: "https://trackings.post.japanpost.jp/services/srv/search/direct?searchKind=S004&locale=ja&reqCodeNo1=",
-            yamato: "https://toi.kuronekoyamato.co.jp/cgi-bin/tneko?number01=",
-            sagawa: "https://k2k.sagawa-exp.co.jp/p/web/okurijosearch.do?okurijoNo="
-        };
-
+        const urls = { post: "https://trackings.post.japanpost.jp/services/srv/search/direct?reqCodeNo1=", yamato: "https://toi.kuronekoyamato.co.jp/cgi-bin/tneko?number01=", sagawa: "https://k2k.sagawa-exp.co.jp/p/web/okurijosearch.do?okurijoNo=" };
         document.getElementById('commonShipDate').value = new Date().toISOString().split('T')[0];
 
-        function syncTimeSlots(val) {
-            document.querySelectorAll('.row-time-sel').forEach(sel => sel.value = val);
-        }
-
-        function formatDateShort(dateObj) {
-            return `${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
-        }
-
+        function syncTimeSlots(val) { document.querySelectorAll('.row-time-sel').forEach(sel => sel.value = val); }
+        function formatDateShort(dateObj) { return `${dateObj.getMonth() + 1}/${dateObj.getDate()}`; }
         function getAutoStatus(shipDateStr) {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const shipDate = new Date(shipDateStr);
-            shipDate.setHours(0, 0, 0, 0);
-            const diffDays = Math.floor((today - shipDate) / (1000 * 60 * 60 * 24));
-            if (diffDays === 0) return "発送済";
-            if (diffDays === 1) return "輸送中";
-            return "配達予定";
+            const diffDays = Math.floor((new Date().setHours(0,0,0,0) - new Date(shipDateStr).setHours(0,0,0,0)) / 86400000);
+            return diffDays === 0 ? "発送済" : diffDays === 1 ? "輸送中" : "配達予定";
         }
 
         function addAll() {
             const rows = document.querySelectorAll('.row-entry');
-            const shipDateStr = document.getElementById('commonShipDate').value;
-            const items = JSON.parse(localStorage.getItem('delivery_final_minimal_pwa_v1') || '[]');
-            
+            const items = JSON.parse(localStorage.getItem('delivery_v_swipe') || '[]');
             rows.forEach(row => {
                 const carrier = row.querySelector('.carrier-sel').value;
                 const num = row.querySelector('.num-input').value.trim();
-                const remark = row.querySelector('.remark-input').value.trim();
-                const timeSlot = row.querySelector('.row-time-sel').value;
-                
+                const remark = row.querySelector('.remark-sel').value;
                 if (num && carrier !== "none") {
-                    const shipDate = new Date(shipDateStr);
-                    const deliveryDate = new Date(shipDate);
-                    deliveryDate.setDate(shipDate.getDate() + 2);
-                    items.unshift({
-                        id: Date.now() + Math.random(),
-                        carrier, num, 
-                        remark: remark || "荷物",
-                        shipDateRaw: shipDateStr,
-                        deliveryDate: formatDateShort(deliveryDate),
-                        timeSlot: timeSlot
-                    });
+                    items.unshift({ id: Date.now() + Math.random(), carrier, num, remark: remark === "選択" ? "荷物" : remark, shipDateRaw: document.getElementById('commonShipDate').value, deliveryDate: formatDateShort(new Date(new Date(document.getElementById('commonShipDate').value).getTime() + 172800000)), timeSlot: row.querySelector('.row-time-sel').value });
                     row.querySelector('.num-input').value = '';
-                    row.querySelector('.remark-input').value = '';
-                    const carrierSel = row.querySelector('.carrier-sel');
-                    carrierSel.value = "none";
-                    updateCarrierColor(carrierSel);
                 }
             });
-            localStorage.setItem('delivery_final_minimal_pwa_v1', JSON.stringify(items));
+            localStorage.setItem('delivery_v_swipe', JSON.stringify(items));
             render();
-            document.getElementById('commonTimeSlot').selectedIndex = 0;
-            syncTimeSlots("指定無");
+            syncTimeSlots("なし");
         }
 
         function remove(id) {
-            let items = JSON.parse(localStorage.getItem('delivery_final_minimal_pwa_v1') || '[]');
-            items = items.filter(item => item.id !== id);
-            localStorage.setItem('delivery_final_minimal_pwa_v1', JSON.stringify(items));
+            let items = JSON.parse(localStorage.getItem('delivery_v_swipe') || '[]');
+            localStorage.setItem('delivery_v_swipe', JSON.stringify(items.filter(i => i.id !== id)));
             render();
         }
 
         function render() {
-            const items = JSON.parse(localStorage.getItem('delivery_final_minimal_pwa_v1') || '[]');
+            const items = JSON.parse(localStorage.getItem('delivery_v_swipe') || '[]');
             const listEl = document.getElementById('list');
-            document.getElementById('count').textContent = `${items.length} 件`;
-            
-            if (items.length === 0) {
-                listEl.innerHTML = '<div class="col-span-2 text-center py-20 bg-white border border-dashed border-slate-200 rounded-[2rem] text-slate-300 font-bold uppercase tracking-widest text-[10px]">荷物はありません</div>';
-                return;
-            }
+            if (items.length === 0) { listEl.innerHTML = '<p class="text-center py-10 text-slate-300 font-bold uppercase tracking-widest text-[10px]">荷物はありません</p>'; return; }
 
             listEl.innerHTML = items.map(item => {
                 const status = getAutoStatus(item.shipDateRaw);
                 return `
-                <div class="grid grid-cols-[auto_auto_1fr] gap-2 items-stretch mb-3 relative group">
-                    <div class="bg-slate-100 rounded-3xl flex flex-col items-center justify-center p-4 min-w-[90px] text-center shadow-sm border border-slate-200">
-                        <p class="text-xs font-bold text-slate-400 leading-none mb-1">到着日</p>
-                        <p class="text-5xl font-bold text-slate-800 leading-none">${item.deliveryDate}</p>
-                    </div>
-                    
-                    <div class="bg-slate-100 rounded-3xl flex flex-col items-center justify-center p-4 min-w-[90px] text-center shadow-sm border border-slate-200 overflow-hidden">
-                        <p class="text-xs font-bold text-slate-400 leading-none mb-1">指定時間</p>
-                        ${item.timeSlot === '指定無' ? 
-                            `<p class="text-xl font-bold text-slate-600 leading-tight">指定なし</p>` :
-                            `<p class="text-3xl font-bold text-slate-600 leading-none">${item.timeSlot.split('-')[0]}:00</p>
-                             <p class="text-slate-400 text-3xl font-bold leading-none">|</p>
-                             <p class="text-3xl font-bold text-slate-600 leading-none">${item.timeSlot.split('-')[1]}:00</p>`
-                        }
-                    </div>
-                    
-                    <div class="border-4 rounded-3xl overflow-hidden shadow-sm bg-slate-100 p-3 grid grid-cols-[auto_auto_1fr] gap-3 items-center border-${item.carrier}">
-                        <div class="bg-slate-800 text-white rounded-xl flex items-center justify-center p-4 h-full min-w-[80px]">
-                            <p class="text-sm font-bold leading-tight text-center uppercase tracking-wider">${status}</p>
-                        </div>
+                <div class="swipe-container" id="container-${item.id}">
+                    <div class="swipe-action">完了</div>
+                    <div class="swipe-content border-4 border-${item.carrier} p-2 flex items-center gap-1.5" 
+                         ontouchstart="handleTouchStart(event, ${item.id})" 
+                         ontouchmove="handleTouchMove(event, ${item.id})" 
+                         ontouchend="handleTouchEnd(event, ${item.id})">
                         
-                        <a href="${urls[item.carrier]}${item.num}" target="_blank" class="bg-white text-slate-800 rounded-xl flex items-center justify-center p-4 h-full min-w-[80px] border border-slate-300 shadow-inner hover:bg-slate-50 active:bg-slate-100 transition-colors">
-                            <p class="text-sm font-bold leading-tight text-center">追跡</p>
+                        <div class="flex flex-col gap-1 w-[55px] shrink-0">
+                            <div class="bg-slate-100 rounded-lg py-1.5 text-center border border-slate-100"><p class="text-[13px] font-bold leading-none">${item.deliveryDate}</p></div>
+                            <div class="bg-slate-50 rounded-lg py-1 text-center border border-slate-50"><p class="text-[9px] font-bold text-slate-500 leading-none">${item.timeSlot}</p></div>
+                        </div>
+
+                        <div class="bg-slate-800 text-white rounded-xl px-1.5 py-3 min-w-[52px] text-center shrink-0">
+                            <p class="text-[10px] font-bold leading-tight">${status}</p>
+                        </div>
+
+                        <a href="${urls[item.carrier]}${item.num}" target="_blank" class="bg-white border-2 border-slate-800 rounded-xl px-1.5 py-3 min-w-[52px] text-center shrink-0 active:bg-slate-100">
+                            <p class="text-[10px] font-bold">追跡</p>
                         </a>
-                        
-                        <div class="text-right flex-1 min-w-0 pr-6">
-                            <p class="text-sm font-bold text-slate-800 truncate mb-1">${item.remark}</p>
-                            <p class="text-sm font-mono text-slate-600 truncate opacity-70">${item.num}</p>
+
+                        <div class="flex-1 min-w-0 text-right pr-0.5">
+                            <p class="text-[11px] font-bold text-slate-800 truncate leading-tight mb-0.5">${item.remark}</p>
+                            <p class="text-[9px] font-mono text-slate-400 truncate leading-none">${item.num}</p>
                         </div>
-                        
-                        <button onclick="remove(${item.id})" class="absolute right-3 top-3 bg-red-500 text-white text-[10px] font-bold px-2 py-1 rounded-md opacity-0 group-hover:opacity-100 active:opacity-100 active:scale-95 transition-all shadow-md">
-                            完了
-                        </button>
                     </div>
-                </div>
-            `}).join('');
+                </div>`;
+            }).join('');
+        }
+
+        // スワイプ処理
+        let startX = 0, currentX = 0;
+        function handleTouchStart(e, id) { startX = e.touches[0].clientX; currentX = 0; }
+        function handleTouchMove(e, id) {
+            currentX = e.touches[0].clientX - startX;
+            const content = document.querySelector(`#container-${id} .swipe-content`);
+            if (currentX < 0) {
+                content.style.transition = 'none';
+                content.style.transform = `translateX(${Math.max(currentX, -100)}px)`;
+            }
+        }
+        function handleTouchEnd(e, id) {
+            const content = document.querySelector(`#container-${id} .swipe-content`);
+            content.style.transition = 'transform 0.2s ease-out';
+            if (currentX < -70) {
+                content.style.transform = 'translateX(-100%)';
+                setTimeout(() => remove(id), 200);
+            } else {
+                content.style.transform = 'translateX(0)';
+            }
         }
         render();
     </script>
