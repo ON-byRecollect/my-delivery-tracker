@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=0">
+    <meta name="robots" content="noindex, nofollow">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>配送追跡</title>
@@ -19,7 +20,6 @@
         .card-yodobashi { background-color: #e0e7ff !important; }
         .card-amazon { background-color: #ffedd5 !important; }
         
-        /* 登録画面のセレクトボックス背景 */
         .opt-none { background-color: #f1f5f9; color: #64748b; }
         .opt-post { background-color: #ef4444 !important; color: white !important; }
         .opt-yamato { background-color: #fbbf24 !important; color: #1e293b !important; }
@@ -55,18 +55,7 @@
                 
                 <div class="space-y-1.5 mb-4">
                     <script>
-                        const remarkOptionsHtml = `
-                            <option value="GEO">GEO</option>
-                            <option value="2nd">2nd</option>
-                            <option value="オフモール">オフモール</option>
-                            <option value="Nojima">Nojima</option>
-                            <option value="じゃんぱら">じゃんぱら</option>
-                            <option value="ELECOM">ELECOM</option>
-                            <option value="Amazon">Amazon</option>
-                            <option value="ヨドバシ">ヨドバシ</option>
-                            <option value="AliExpress">AliExpress</option>
-                            <option value="プライベート">個人</option>
-                        `;
+                        const remarkOptionsHtml = `<option value="GEO">GEO</option><option value="2nd">2nd</option><option value="オフモール">オフモール</option><option value="Nojima">Nojima</option><option value="じゃんぱら">じゃんぱら</option><option value="ELECOM">ELECOM</option><option value="Amazon">Amazon</option><option value="ヨドバシ">ヨドバシ</option><option value="AliExpress">AliExpress</option><option value="プライベート">個人</option>`;
                         const timeOptionsHtml = `<option value="なし">なし</option><option value="8-12">8-12</option><option value="14-16">14-16</option><option value="16-18">16-18</option><option value="18-20">18-20</option><option value="19-21">19-21</option>`;
                         
                         function updateCarrierColor(el) { 
@@ -126,7 +115,6 @@
         
         document.getElementById('commonShipDate').value = new Date().toISOString().split('T')[0];
 
-        // 一括削除 (ポップアップなし)
         function clearAllInputs() {
             document.querySelectorAll('.carrier-sel').forEach(el => { el.value = "none"; updateCarrierColor(el); });
             document.querySelectorAll('.num-input').forEach(el => el.value = "");
@@ -145,7 +133,7 @@
 
         function addAll() {
             const rows = document.querySelectorAll('.row-entry');
-            const items = JSON.parse(localStorage.getItem('delivery_final_v6') || '[]');
+            const items = JSON.parse(localStorage.getItem('delivery_v_final_secure') || '[]');
             const shipDateStr = document.getElementById('commonShipDate').value;
 
             rows.forEach(row => {
@@ -167,9 +155,8 @@
                     updateCarrierColor(carrierSel);
                 }
             });
-            localStorage.setItem('delivery_final_v6', JSON.stringify(items));
+            localStorage.setItem('delivery_v_final_secure', JSON.stringify(items));
             render();
-
             document.getElementById('commonCarrier').selectedIndex = 0;
             document.getElementById('commonTimeSlot').selectedIndex = 0;
             document.getElementById('commonRemark').selectedIndex = 0;
@@ -177,24 +164,24 @@
         }
 
         function remove(id) {
-            let items = JSON.parse(localStorage.getItem('delivery_final_v6') || '[]');
-            localStorage.setItem('delivery_final_v6', JSON.stringify(items.filter(i => i.id !== id)));
+            let items = JSON.parse(localStorage.getItem('delivery_v_final_secure') || '[]');
+            localStorage.setItem('delivery_v_final_secure', JSON.stringify(items.filter(i => i.id !== id)));
             render();
         }
 
         function updateDate(id, val) {
-            let items = JSON.parse(localStorage.getItem('delivery_final_v6') || '[]');
+            let items = JSON.parse(localStorage.getItem('delivery_v_final_secure') || '[]');
             const item = items.find(i => i.id === id);
-            if (item) { item.deliveryDateRaw = val; localStorage.setItem('delivery_final_v6', JSON.stringify(items)); render(); }
+            if (item) { item.deliveryDateRaw = val; localStorage.setItem('delivery_v_final_secure', JSON.stringify(items)); render(); }
         }
         function updateTime(id, val) {
-            let items = JSON.parse(localStorage.getItem('delivery_final_v6') || '[]');
+            let items = JSON.parse(localStorage.getItem('delivery_v_final_secure') || '[]');
             const item = items.find(i => i.id === id);
-            if (item) { item.timeSlot = val; localStorage.setItem('delivery_final_v6', JSON.stringify(items)); render(); }
+            if (item) { item.timeSlot = val; localStorage.setItem('delivery_v_final_secure', JSON.stringify(items)); render(); }
         }
 
         function render() {
-            let items = JSON.parse(localStorage.getItem('delivery_final_v6') || '[]');
+            let items = JSON.parse(localStorage.getItem('delivery_v_final_secure') || '[]');
             const listEl = document.getElementById('list');
             if (items.length === 0) { listEl.innerHTML = '<p class="text-center py-10 text-slate-300 font-bold text-[10px]">荷物はありません</p>'; return; }
 
@@ -216,23 +203,19 @@
                         <p class="text-[12px] font-bold text-slate-800 leading-none">${displayDate}</p>
                         <input type="date" value="${item.deliveryDateRaw}" onchange="updateDate(${item.id}, this.value)" class="absolute inset-0 opacity-0 w-full h-full">
                     </div>
-                    
                     <div class="bg-white rounded-[1.25rem] w-[55px] h-10 shrink-0 relative flex items-center justify-center shadow-sm">
                         <p class="text-[10px] font-bold text-slate-500 leading-none">${item.timeSlot}</p>
                         <select onchange="updateTime(${item.id}, this.value)" class="absolute inset-0 opacity-0 w-full h-full">
                             <option value="なし" ${item.timeSlot==='なし'?'selected':''}>なし</option><option value="8-12" ${item.timeSlot==='8-12'?'selected':''}>8-12</option><option value="14-16" ${item.timeSlot==='14-16'?'selected':''}>14-16</option><option value="16-18" ${item.timeSlot==='16-18'?'selected':''}>16-18</option><option value="18-20" ${item.timeSlot==='18-20'?'selected':''}>18-20</option><option value="19-21" ${item.timeSlot==='19-21'?'selected':''}>19-21</option>
                         </select>
                     </div>
-
                     <a href="${urls[item.carrier]}${item.carrier==='amazon'||item.carrier==='yodobashi'?'':item.num}" target="_blank" class="bg-slate-800 rounded-[1.25rem] h-10 w-[55px] shrink-0 flex items-center justify-center active:opacity-70 shadow-sm">
                         <p class="text-[11px] font-bold text-white">${btnText}</p>
                     </a>
-
                     <div class="flex-1 min-w-0 text-left px-1 flex flex-col justify-center">
                         <p class="text-[11px] font-bold truncate leading-tight mb-0.5 text-slate-800">${item.remark}</p>
                         <p class="text-[9px] font-mono truncate leading-none text-slate-600 opacity-80">${item.num}</p>
                     </div>
-
                     <button onclick="remove(${item.id})" class="bg-white/40 backdrop-blur-sm rounded-[1.25rem] h-10 w-[55px] shrink-0 flex items-center justify-center active:bg-red-500 active:text-white transition-colors shadow-sm">
                         <p class="text-[11px] font-bold text-slate-800">完了</p>
                     </button>
