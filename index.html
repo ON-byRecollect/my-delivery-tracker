@@ -3,55 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>配送管理 - Auto Status Edition</title>
+    <title>配送一括管理システム</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        .card-post { border-top: 6px solid #ef4444; }   /* 日本郵便：赤 */
-        .card-yamato { border-top: 6px solid #fbbf24; } /* ヤマト運輸：黄 */
-        .card-sagawa { border-top: 6px solid #2563eb; } /* 佐川急便：青 */
+        /* 業者別のアクセント（カード上部） */
+        .card-post { border-top: 6px solid #ef4444; }
+        .card-yamato { border-top: 6px solid #fbbf24; }
+        .card-sagawa { border-top: 6px solid #2563eb; }
+        
+        /* 業者別のバッジ色 */
         .badge-post { background-color: #ef4444; color: white; }
         .badge-yamato { background-color: #fbbf24; color: #1e293b; }
         .badge-sagawa { background-color: #2563eb; color: white; }
+        
+        /* 業者別のアイコン囲み（オレンジボックスの枠線） */
+        .border-post { border: 3px solid #ef4444; }
+        .border-yamato { border: 3px solid #fbbf24; }
+        .border-sagawa { border: 3px solid #2563eb; }
+
+        /* 入力欄の背景色設定 */
+        .opt-post { background-color: #ef4444; color: white; }
+        .opt-yamato { background-color: #fbbf24; color: #1e293b; }
+        .opt-sagawa { background-color: #2563eb; color: white; }
+
+        input::placeholder { color: #cbd5e1; }
+        @media (max-width: 640px) {
+            .row-grid { grid-template-columns: 75px 1fr 75px 80px; gap: 4px; }
+            .row-grid select, .row-grid input { font-size: 10px; padding: 8px 4px; }
+        }
     </style>
 </head>
 <body class="bg-slate-50 min-h-screen p-2 md:p-4 font-sans text-slate-900 text-[11px] md:text-sm">
     <div class="max-w-xl mx-auto">
         <header class="mb-4 text-center py-2">
-            <h1 class="text-2xl font-black italic tracking-tighter text-slate-800 uppercase">Batch Tracker</h1>
+            <h1 class="text-2xl font-black italic tracking-tighter text-slate-800 uppercase">配送一括追跡</h1>
         </header>
 
         <main>
-            <div class="mb-6 bg-white p-4 rounded-[2rem] shadow-lg border border-slate-100">
+            <div class="mb-6 bg-white p-3 md:p-6 rounded-[2rem] shadow-lg border border-slate-100">
                 <div class="flex justify-between items-center mb-4 px-1">
-                    <h2 class="font-black text-slate-700 text-sm italic">INPUT SET</h2>
-                    <input type="date" id="commonShipDate" class="bg-slate-50 text-[11px] font-bold p-1.5 px-2 rounded-lg border border-slate-200 outline-none">
+                    <h2 class="font-black text-slate-700 text-sm italic">新規登録</h2>
+                    <div class="flex items-center gap-1">
+                        <span class="text-[9px] font-bold text-slate-400">発送日:</span>
+                        <input type="date" id="commonShipDate" class="bg-slate-50 text-[11px] font-bold p-1.5 px-2 rounded-lg border border-slate-200 outline-none">
+                    </div>
                 </div>
                 
                 <div class="space-y-2 mb-4">
+                    <datalist id="remark-options">
+                        <option value="GEO"></option><option value="2nd"></option>
+                        <option value="ハードオフ"></option><option value="Nojima"></option>
+                        <option value="じゃんぱら"></option><option value="ELECOM"></option>
+                        <option value="プライベート"></option><option value="その他"></option>
+                    </datalist>
+
                     <script>
-                        const remarkOptions = `
-                            <option value="GEO">GEO</option><option value="2nd">2nd</option>
-                            <option value="ハードオフ">ハードオフ</option><option value="Nojima">Nojima</option>
-                            <option value="じゃんぱら">じゃんぱら</option><option value="ELECOM">ELECOM</option>
-                            <option value="プライベート">プライベート</option><option value="その他">その他</option>
-                        `;
                         const timeOptions = `
                             <option value="指定なし">指定なし</option><option value="午前中">午前中</option>
                             <option value="14時-16時">14時-16時</option><option value="16時-18時">16時-18時</option>
                             <option value="18時-20時">18時-20時</option><option value="19時-21時">19時-21時</option>
                         `;
-
                         for(let i=0; i<5; i++) {
                             document.write(`
-                            <div class="grid grid-cols-[70px_1fr_90px] gap-1 row-entry">
-                                <select class="carrier-sel bg-slate-50 text-[10px] font-bold p-2 rounded-xl border border-slate-100 outline-none">
-                                    <option value="yamato">ヤマト</option><option value="sagawa">佐川</option><option value="post">郵便</option>
+                            <div class="grid grid-cols-[75px_1fr_70px_80px] gap-1 row-entry items-center row-grid">
+                                <select class="carrier-sel bg-slate-50 font-bold rounded-xl border border-slate-100 outline-none p-2 h-10 text-[9px]" onchange="this.className='carrier-sel font-bold rounded-xl border border-slate-100 outline-none p-2 h-10 text-[9px] opt-' + this.value">
+                                    <option value="yamato" class="opt-yamato" selected>ヤマト運輸</option>
+                                    <option value="sagawa" class="opt-sagawa">佐川急便</option>
+                                    <option value="post" class="opt-post">日本郵便</option>
                                 </select>
-                                <input type="text" placeholder="番号" class="num-input bg-slate-50 p-2 px-3 rounded-xl border border-slate-100 outline-none">
-                                <select class="remark-sel bg-slate-50 text-[10px] font-bold p-2 rounded-xl border border-slate-100 outline-none">
-                                    ${remarkOptions}
+                                <input type="text" placeholder="番号" class="num-input bg-slate-50 rounded-xl border border-slate-100 outline-none p-2 px-2 h-10">
+                                <select class="row-time-sel bg-slate-50 font-bold rounded-xl border border-slate-100 outline-none p-2 h-10 text-[9px]">
+                                    ${timeOptions}
                                 </select>
-                                <input type="hidden" class="row-time-sel" value="指定なし">
+                                <input type="text" list="remark-options" placeholder="備考" class="remark-input bg-slate-50 font-bold rounded-xl border border-slate-100 outline-none p-2 px-2 h-10">
                             </div>
                             `);
                         }
@@ -59,19 +83,22 @@
                 </div>
 
                 <div class="grid grid-cols-1 gap-2 pt-3 border-t border-slate-100">
-                    <select id="commonTimeSlot" onchange="syncTimeSlots(this.value)" class="w-full bg-blue-50 text-[11px] p-3 rounded-2xl outline-none font-bold text-blue-600 text-center">
-                        <option value="" disabled selected>時間を一括設定</option>
-                        ${timeOptions}
-                    </select>
-                    <button onclick="addAll()" class="bg-slate-800 text-white font-black py-4 rounded-2xl text-sm shadow-md active:scale-95 transition-transform uppercase tracking-widest">
-                        Tracking Start
+                    <div class="flex items-center gap-2 bg-blue-50 p-1 px-3 rounded-2xl border border-blue-100">
+                        <span class="text-[9px] font-black text-blue-400 uppercase whitespace-nowrap">一括指定:</span>
+                        <select id="commonTimeSlot" onchange="syncTimeSlots(this.value)" class="w-full bg-transparent text-[11px] p-2 outline-none font-bold text-blue-600 text-center">
+                            <option value="" disabled selected>選択してください</option>
+                            ${timeOptions}
+                        </select>
+                    </div>
+                    <button onclick="addAll()" class="bg-slate-800 text-white font-black py-4 rounded-2xl text-sm shadow-md active:scale-95 transition-transform uppercase tracking-widest mt-1">
+                        追跡を開始する
                     </button>
                 </div>
             </div>
 
-            <div class="flex items-center justify-between mb-4 px-2">
-                <h2 class="font-black text-sm text-slate-800 italic uppercase">Shipments</h2>
-                <span id="count" class="bg-slate-200 text-slate-500 text-[10px] px-3 py-1 rounded-full font-black tracking-widest">0 ITEMS</span>
+            <div class="flex items-center justify-between mb-4 px-2 text-[10px] font-black text-slate-400 italic uppercase">
+                <h2>追跡中の荷物</h2>
+                <span id="count" class="bg-slate-200 px-3 py-1 rounded-full text-slate-500 font-black tracking-tight">0 件</span>
             </div>
             
             <div id="list" class="grid grid-cols-2 gap-3 pb-20"></div>
@@ -92,21 +119,16 @@
             document.querySelectorAll('.row-time-sel').forEach(sel => sel.value = val);
         }
 
-        // 月/日 のフォーマット（2026年を隠す）
         function formatDateShort(dateObj) {
             return `${dateObj.getMonth() + 1}/${dateObj.getDate()}`;
         }
 
-        // ステータスの自動判別ロジック
         function getAutoStatus(shipDateStr) {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             const shipDate = new Date(shipDateStr);
             shipDate.setHours(0, 0, 0, 0);
-
-            const diffTime = today - shipDate;
-            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
+            const diffDays = Math.floor((today - shipDate) / (1000 * 60 * 60 * 24));
             if (diffDays === 0) return "発送済";
             if (diffDays === 1) return "輸送中";
             return "配達予定";
@@ -115,48 +137,45 @@
         function addAll() {
             const rows = document.querySelectorAll('.row-entry');
             const shipDateStr = document.getElementById('commonShipDate').value;
-            const items = JSON.parse(localStorage.getItem('delivery_final_v6') || '[]');
-
+            const items = JSON.parse(localStorage.getItem('delivery_v_final') || '[]');
             rows.forEach(row => {
                 const carrier = row.querySelector('.carrier-sel').value;
                 const num = row.querySelector('.num-input').value.trim();
-                const remark = row.querySelector('.remark-sel').value;
+                const remark = row.querySelector('.remark-input').value.trim() || '荷物';
                 const timeSlot = row.querySelector('.row-time-sel').value;
-
                 if (num) {
                     const shipDate = new Date(shipDateStr);
                     const deliveryDate = new Date(shipDate);
                     deliveryDate.setDate(shipDate.getDate() + 2);
-
                     items.unshift({
                         id: Date.now() + Math.random(),
                         carrier, num, remark,
-                        shipDateRaw: shipDateStr, // 計算用に保存
+                        shipDateRaw: shipDateStr,
                         deliveryDate: formatDateShort(deliveryDate),
                         timeSlot: timeSlot
                     });
                     row.querySelector('.num-input').value = '';
+                    row.querySelector('.remark-input').value = '';
                 }
             });
-
-            localStorage.setItem('delivery_final_v6', JSON.stringify(items));
+            localStorage.setItem('delivery_v_final', JSON.stringify(items));
             render();
         }
 
         function remove(id) {
-            let items = JSON.parse(localStorage.getItem('delivery_final_v6') || '[]');
+            let items = JSON.parse(localStorage.getItem('delivery_v_final') || '[]');
             items = items.filter(item => item.id !== id);
-            localStorage.setItem('delivery_final_v6', JSON.stringify(items));
+            localStorage.setItem('delivery_v_final', JSON.stringify(items));
             render();
         }
 
         function render() {
-            const items = JSON.parse(localStorage.getItem('delivery_final_v6') || '[]');
+            const items = JSON.parse(localStorage.getItem('delivery_v_final') || '[]');
             const listEl = document.getElementById('list');
-            document.getElementById('count').textContent = `${items.length} ITEMS`;
+            document.getElementById('count').textContent = `${items.length} 件`;
             
             if (items.length === 0) {
-                listEl.innerHTML = '<div class="col-span-2 text-center py-20 bg-white border border-dashed border-slate-200 rounded-[2.5rem] text-slate-300 font-black italic tracking-widest">NO DATA</div>';
+                listEl.innerHTML = '<div class="col-span-2 text-center py-20 bg-white border border-dashed border-slate-200 rounded-[2.5rem] text-slate-300 font-bold italic uppercase">荷物はありません</div>';
                 return;
             }
 
@@ -164,30 +183,34 @@
                 const status = getAutoStatus(item.shipDateRaw);
                 return `
                 <div class="bg-white rounded-[2rem] shadow-md overflow-hidden card-${item.carrier} flex flex-col border border-slate-100 transition-transform">
-                    <div class="p-3 pb-2">
-                        <div class="flex justify-between items-start mb-2">
-                            <span class="text-[8px] font-black px-2 py-0.5 rounded-full badge-${item.carrier} uppercase tracking-tighter">
+                    <div class="p-3">
+                        <div class="flex justify-between items-start mb-2 px-1">
+                            <span class="text-[8px] font-black px-2 py-0.5 rounded-full badge-${item.carrier} uppercase tracking-tighter shadow-sm">
                                 ${names[item.carrier].substring(0,3)}
                             </span>
-                            <button onclick="remove(${item.id})" class="text-[9px] font-black text-slate-300 hover:text-red-400 uppercase tracking-tighter">
-                                完了(削除)
+                            <button onclick="remove(${item.id})" class="text-[9px] font-black text-slate-200 hover:text-red-400 uppercase tracking-tighter">
+                                完了
                             </button>
                         </div>
-                        <div class="flex items-center gap-1.5 mb-1">
-                            <span class="bg-slate-800 text-white text-[8px] font-black px-1.5 py-0.5 rounded-md">${status}</span>
-                            <h3 class="font-black text-xs text-slate-800 truncate flex-1">${item.remark}</h3>
+                        <div class="flex items-center gap-1 mb-1 px-1">
+                            <span class="bg-slate-800 text-white text-[7px] font-black px-1.5 py-0.5 rounded-md shrink-0 uppercase tracking-tighter">${status}</span>
+                            <h3 class="font-black text-[11px] text-slate-800 truncate flex-1 tracking-tight">${item.remark}</h3>
                         </div>
-                        <p class="text-[9px] font-mono text-slate-400 mb-2 truncate">${item.num}</p>
+                        <p class="text-[9px] font-mono text-slate-400 mb-3 px-1 truncate">${item.num}</p>
                         
-                        <div class="bg-orange-500 rounded-2xl p-2 text-white text-center shadow-lg shadow-orange-100">
-                            <p class="text-[8px] font-bold opacity-80 uppercase tracking-widest">到着目安</p>
-                            <p class="text-xl font-black leading-none my-0.5">${item.deliveryDate}</p>
-                            <p class="text-[9px] font-bold opacity-90 tracking-tighter">🕒 ${item.timeSlot}</p>
+                        <div class="flex gap-1.5 mb-2">
+                            <div class="flex-1 bg-orange-500 rounded-xl py-1.5 text-white text-center shadow-lg shadow-orange-100 border-${item.carrier}">
+                                <p class="text-[7px] font-black opacity-80 uppercase leading-none mb-0.5 text-orange-100">到着目安</p>
+                                <p class="text-xs font-black leading-none">${item.deliveryDate}</p>
+                            </div>
+                            <div class="flex-1 bg-slate-50 rounded-xl py-1.5 border border-slate-100 text-center flex flex-col justify-center">
+                                <p class="text-[7px] text-slate-400 font-black uppercase leading-none mb-0.5">指定時間</p>
+                                <p class="text-[8px] font-black text-slate-600 leading-none truncate px-0.5">${item.timeSlot}</p>
+                            </div>
                         </div>
-                    </div>
-                    <div class="px-3 pb-3">
-                        <a href="${urls[item.carrier]}${item.num}" target="_blank" class="block w-full bg-slate-800 text-white text-center py-2.5 rounded-xl text-[10px] font-black hover:bg-slate-700 active:scale-95 transition-all shadow-sm">
-                            追跡
+
+                        <a href="${urls[item.carrier]}${item.num}" target="_blank" class="block w-full bg-slate-800 text-white text-center py-2 rounded-xl text-[10px] font-black hover:bg-slate-700 active:scale-95 transition-all shadow-sm">
+                            追跡サイト
                         </a>
                     </div>
                 </div>
