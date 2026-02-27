@@ -22,7 +22,6 @@
         .opt-yamato { background-color: #fbbf24 !important; color: #1e293b !important; }
         .opt-sagawa { background-color: #2563eb !important; color: white !important; }
 
-        /* 入力欄のプレースホルダーを薄く */
         input::placeholder { color: #94a3b8; font-weight: 400; }
 
         @media (max-width: 640px) {
@@ -87,9 +86,9 @@
                 </div>
 
                 <div class="grid grid-cols-1 gap-2 pt-3 border-t border-slate-100">
-                    <div class="flex items-center gap-2 bg-slate-800 p-2 px-3 rounded-2xl shadow-inner">
-                        <span class="text-[10px] font-bold text-slate-300 whitespace-nowrap">一括指定:</span>
-                        <select id="commonTimeSlot" onchange="syncTimeSlots(this.value)" class="w-full bg-transparent text-[11px] outline-none font-bold text-white text-center">
+                    <div class="flex items-center gap-2 bg-slate-100 p-2 px-3 rounded-2xl border border-slate-200">
+                        <span class="text-[10px] font-bold text-slate-500 whitespace-nowrap">一括指定:</span>
+                        <select id="commonTimeSlot" onchange="syncTimeSlots(this.value)" class="w-full bg-transparent text-[11px] outline-none font-bold text-slate-800 text-center">
                             <option value="" disabled selected>時間を一括で設定</option>
                             <option value="指定なし">指定なし</option><option value="8時-12時">8時-12時</option>
                             <option value="14時-16時">14時-16時</option><option value="16時-18時">16時-18時</option>
@@ -143,7 +142,7 @@
         function addAll() {
             const rows = document.querySelectorAll('.row-entry');
             const shipDateStr = document.getElementById('commonShipDate').value;
-            const items = JSON.parse(localStorage.getItem('delivery_final_minimal_v1') || '[]');
+            const items = JSON.parse(localStorage.getItem('delivery_v_final_gray') || '[]');
             
             rows.forEach(row => {
                 const carrier = row.querySelector('.carrier-sel').value;
@@ -170,21 +169,21 @@
                     updateCarrierColor(carrierSel);
                 }
             });
-            localStorage.setItem('delivery_final_minimal_v1', JSON.stringify(items));
+            localStorage.setItem('delivery_v_final_gray', JSON.stringify(items));
             render();
             document.getElementById('commonTimeSlot').selectedIndex = 0;
             syncTimeSlots("指定なし");
         }
 
         function remove(id) {
-            let items = JSON.parse(localStorage.getItem('delivery_final_minimal_v1') || '[]');
+            let items = JSON.parse(localStorage.getItem('delivery_v_final_gray') || '[]');
             items = items.filter(item => item.id !== id);
-            localStorage.setItem('delivery_final_minimal_v1', JSON.stringify(items));
+            localStorage.setItem('delivery_v_final_gray', JSON.stringify(items));
             render();
         }
 
         function render() {
-            const items = JSON.parse(localStorage.getItem('delivery_final_minimal_v1') || '[]');
+            const items = JSON.parse(localStorage.getItem('delivery_v_final_gray') || '[]');
             const listEl = document.getElementById('list');
             document.getElementById('count').textContent = `${items.length} 件`;
             
@@ -196,7 +195,7 @@
             listEl.innerHTML = items.map(item => {
                 const status = getAutoStatus(item.shipDateRaw);
                 return `
-                <div class="bg-white rounded-[1.5rem] border-4 border-${item.carrier} flex flex-col overflow-hidden transition-all shadow-sm">
+                <div class="bg-white rounded-[1.5rem] border-4 border-${item.carrier} flex flex-col overflow-hidden shadow-sm transition-transform">
                     <div class="p-3">
                         <div class="flex justify-between items-start mb-2">
                             <span class="text-[9px] font-bold px-2 py-0.5 rounded-full badge-${item.carrier}">
@@ -206,18 +205,22 @@
                                 完了
                             </button>
                         </div>
-                        <div class="flex items-center gap-1 mb-1">
-                            <span class="bg-slate-800 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md shrink-0 uppercase">${status}</span>
-                            <h3 class="font-bold text-[12px] text-slate-800 truncate flex-1 tracking-normal">${item.remark}</h3>
+                        
+                        <div class="text-center mb-3">
+                            <span class="bg-slate-800 text-white text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider inline-block">
+                                ${status}
+                            </span>
                         </div>
-                        <p class="text-[10px] font-mono text-slate-400 mb-3 truncate font-medium">${item.num}</p>
+
+                        <h3 class="font-bold text-[12px] text-slate-800 truncate text-center mb-1 tracking-normal">${item.remark}</h3>
+                        <p class="text-[10px] font-mono text-slate-400 mb-4 text-center truncate px-1">${item.num}</p>
                         
                         <div class="flex gap-1 mb-2">
                             <div class="flex-1 bg-orange-500 rounded-xl py-1.5 text-white text-center shadow-md shadow-orange-100/50">
                                 <p class="text-[8px] font-bold opacity-90 leading-none mb-0.5 text-orange-50">到着目安</p>
                                 <p class="text-[13px] font-bold leading-none">${item.deliveryDate}</p>
                             </div>
-                            <div class="flex-1 bg-slate-50 rounded-xl py-1.5 border border-slate-200 text-center flex flex-col justify-center">
+                            <div class="flex-1 bg-slate-50 rounded-xl py-1.5 border border-slate-200 text-center flex flex-col justify-center overflow-hidden">
                                 <p class="text-[8px] text-slate-400 font-bold leading-none mb-0.5">指定時間</p>
                                 <p class="text-[9px] font-bold text-slate-600 leading-none truncate px-0.5">${item.timeSlot}</p>
                             </div>
