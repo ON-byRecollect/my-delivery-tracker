@@ -8,10 +8,10 @@
     <title>配送追跡</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* 業者別の枠線カラー */
-        .border-post { border-color: #ef4444 !important; }
-        .border-yamato { border-color: #fbbf24 !important; }
-        .border-sagawa { border-color: #2563eb !important; }
+        /* 業者別の背景色設定 */
+        .card-post { background-color: #ef4444 !important; color: white !important; }
+        .card-yamato { background-color: #fbbf24 !important; color: #1e293b !important; }
+        .card-sagawa { background-color: #2563eb !important; color: white !important; }
         
         /* セレクトボックスの業者別背景色 */
         .opt-none { background-color: #f1f5f9; color: #64748b; }
@@ -37,7 +37,7 @@
 
         <main>
             <div class="mb-5 bg-white p-3 rounded-[1.5rem] shadow-sm border border-slate-200">
-                <div class="flex justify-end items-center mb-3">
+                <div class="flex justify-end items-center mb-3 px-1">
                     <div class="flex items-center gap-1">
                         <span class="text-[10px] font-medium text-slate-400">発送日:</span>
                         <input type="date" id="commonShipDate" class="bg-slate-100 text-[10px] font-bold p-1 px-2 rounded-lg border border-slate-200 outline-none">
@@ -84,7 +84,7 @@
 
         function addAll() {
             const rows = document.querySelectorAll('.row-entry');
-            const items = JSON.parse(localStorage.getItem('delivery_v_final_minimal') || '[]');
+            const items = JSON.parse(localStorage.getItem('delivery_v_final_bg_color') || '[]');
             rows.forEach(row => {
                 const carrier = row.querySelector('.carrier-sel').value;
                 const num = row.querySelector('.num-input').value.trim();
@@ -98,47 +98,51 @@
                     updateCarrierColor(carrierSel);
                 }
             });
-            localStorage.setItem('delivery_v_final_minimal', JSON.stringify(items));
+            localStorage.setItem('delivery_v_final_bg_color', JSON.stringify(items));
             render();
             syncTimeSlots("なし");
         }
 
         function remove(id) {
-            let items = JSON.parse(localStorage.getItem('delivery_v_final_minimal') || '[]');
-            localStorage.setItem('delivery_v_final_minimal', JSON.stringify(items.filter(i => i.id !== id)));
+            let items = JSON.parse(localStorage.getItem('delivery_v_final_bg_color') || '[]');
+            localStorage.setItem('delivery_v_final_bg_color', JSON.stringify(items.filter(i => i.id !== id)));
             render();
         }
 
         function render() {
-            const items = JSON.parse(localStorage.getItem('delivery_v_final_minimal') || '[]');
+            const items = JSON.parse(localStorage.getItem('delivery_v_final_bg_color') || '[]');
             const listEl = document.getElementById('list');
             if (items.length === 0) { listEl.innerHTML = '<p class="text-center py-10 text-slate-300 font-bold uppercase tracking-widest text-[10px]">荷物はありません</p>'; return; }
 
             listEl.innerHTML = items.map(item => {
+                // ヤマト(黄色)の時だけボタンなどの色を調整するための判定
+                const isYamato = item.carrier === 'yamato';
+                const btnBg = isYamato ? 'bg-black/10' : 'bg-white/20';
+                const mainBtnBg = 'bg-white';
+                const mainBtnText = isYamato ? 'text-slate-800' : 'text-slate-800';
+
                 return `
-                <div class="bg-white rounded-[1.25rem] border-4 border-${item.carrier} p-2 shadow-sm">
-                    <div class="flex items-center gap-1 mb-2">
-                        <div class="bg-slate-100 rounded-lg w-[55px] h-10 shrink-0 flex items-center justify-center border border-slate-200">
-                            <p class="text-[13px] font-bold leading-none">${item.deliveryDate}</p>
-                        </div>
-                        
-                        <div class="bg-slate-100 rounded-lg w-[55px] h-10 shrink-0 flex items-center justify-center border border-slate-200">
-                            <p class="text-[11px] font-bold text-slate-500 leading-none">${item.timeSlot}</p>
-                        </div>
-
-                        <a href="${urls[item.carrier]}${item.num}" target="_blank" class="bg-white border-2 border-slate-800 rounded-lg h-10 w-[55px] shrink-0 flex items-center justify-center active:bg-slate-100 transition-colors">
-                            <p class="text-[12px] font-bold">追跡</p>
-                        </a>
-
-                        <button onclick="remove(${item.id})" class="bg-slate-100 border border-slate-200 rounded-lg h-10 w-[55px] shrink-0 flex items-center justify-center active:bg-red-500 active:text-white transition-colors">
-                            <p class="text-[12px] font-bold">完了</p>
-                        </button>
+                <div class="card-${item.carrier} rounded-[1.25rem] p-2 shadow-sm flex items-center gap-1.5 transition-all">
+                    <div class="${btnBg} rounded-lg w-[50px] h-10 shrink-0 flex items-center justify-center">
+                        <p class="text-[12px] font-bold leading-none">${item.deliveryDate}</p>
+                    </div>
+                    
+                    <div class="${btnBg} rounded-lg w-[50px] h-10 shrink-0 flex items-center justify-center">
+                        <p class="text-[10px] font-bold leading-none opacity-90">${item.timeSlot}</p>
                     </div>
 
-                    <div class="px-1 text-left flex items-baseline gap-2 overflow-hidden">
-                        <span class="text-[12px] font-bold text-slate-800 shrink-0">${item.remark}</span>
-                        <span class="text-[10px] font-mono text-slate-400 font-medium truncate">${item.num}</span>
+                    <a href="${urls[item.carrier]}${item.num}" target="_blank" class="${mainBtnBg} ${mainBtnText} rounded-lg h-10 w-[50px] shrink-0 flex items-center justify-center active:opacity-70 shadow-sm transition-colors">
+                        <p class="text-[11px] font-bold">追跡</p>
+                    </a>
+
+                    <div class="flex-1 min-w-0 text-left px-1 flex flex-col justify-center">
+                        <p class="text-[11px] font-bold truncate leading-tight mb-0.5">${item.remark}</p>
+                        <p class="text-[9px] font-mono truncate leading-none opacity-80">${item.num}</p>
                     </div>
+
+                    <button onclick="remove(${item.id})" class="${mainBtnBg} ${mainBtnText} rounded-lg h-10 w-[50px] shrink-0 flex items-center justify-center active:opacity-70 shadow-sm transition-colors">
+                        <p class="text-[11px] font-bold">完了</p>
+                    </button>
                 </div>`;
             }).join('');
         }
